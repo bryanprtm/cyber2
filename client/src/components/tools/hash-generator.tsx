@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Copy, Refresh, Shield, ExternalLink } from 'lucide-react';
+import { Copy, RefreshCw, Shield, ExternalLink } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -234,7 +234,7 @@ export default function HashGenerator({ onHashGenerated }: HashGeneratorProps) {
               disabled={isGenerating}
               className="border-secondary/50 text-secondary font-tech"
             >
-              <Refresh className="h-4 w-4 mr-2" />
+              <RefreshCw className="h-4 w-4 mr-2" />
               Reset
             </Button>
           </div>
