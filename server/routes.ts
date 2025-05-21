@@ -1,6 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { portScan, PortScannerOptions } from "./tools/portScanner";
+import { setupWebSocketServer } from "./tools/wsServer";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API Routes - all prefixed with /api
@@ -19,24 +21,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
   
-  // Port Scanner API
-  app.post("/api/scan/port", (req, res) => {
-    const { target, ports, timeout } = req.body;
+  // Port Scanner API - Real implementation
+  app.post("/api/scan/port", async (req, res) => {
+    const { target, ports, timeout, concurrent } = req.body;
     
     if (!target) {
       return res.status(400).json({ success: false, message: "Target is required" });
     }
     
-    // In a real implementation, this would perform an actual port scan
-    res.json({
-      success: true,
-      results: {
+    if (!ports) {
+      return res.status(400).json({ success: false, message: "Ports range is required" });
+    }
+    
+    try {
+      const startTime = Date.now();
+      
+      const options: PortScannerOptions = {
         target,
-        scannedPorts: ports || "1-1000",
-        openPorts: [22, 80, 443],
-        scanDuration: "3.45s"
-      }
-    });
+        ports,
+        timeout: timeout || 3000,
+        concurrent: concurrent || 50
+      };
+      
+      const results = await portScan(options);
+      const scanDuration = ((Date.now() - startTime) / 1000).toFixed(2);
+      
+      const openPorts = results.filter(r => r.status === 'open');
+      
+      res.json({
+        success: true,
+        results: {
+          target,
+          scannedPorts: ports,
+          openPorts: openPorts.map(p => ({ port: p.port, service: p.service })),
+          closedPorts: results.filter(r => r.status === 'closed').length,
+          filteredPorts: results.filter(r => r.status === 'filtered').length,
+          totalPorts: results.length,
+          scanDuration: `${scanDuration}s`
+        }
+      });
+    } catch (error) {
+      console.error('Port scan error:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: `Port scan failed: ${(error as Error).message}` 
+      });
+    }
   });
   
   // HTTP Header Analyzer API
@@ -105,5 +135,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // Setup WebSocket server for real-time communication
+  setupWebSocketServer(httpServer);
+  
   return httpServer;
 }

@@ -8,6 +8,7 @@ import Home from "@/pages/home";
 import Tools from "@/pages/tools";
 import About from "@/pages/about";
 import Docs from "@/pages/docs";
+import PortScannerPage from "@/pages/tool-detail/port-scanner";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 
@@ -21,6 +22,7 @@ function Router() {
           <Route path="/tools" component={Tools} />
           <Route path="/docs" component={Docs} />
           <Route path="/about" component={About} />
+          <Route path="/tools/port-scanner" component={PortScannerPage} />
           <Route component={NotFound} />
         </Switch>
       </main>
