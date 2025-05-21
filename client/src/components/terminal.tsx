@@ -30,39 +30,62 @@ export default function Terminal({ className }: TerminalProps) {
       <div className="bg-[hsl(var(--terminal-bg))] p-2 rounded-t flex justify-between items-center border-b border-primary/30">
         <div className="text-primary font-tech text-sm">Terminal Output</div>
         <div className="flex space-x-2">
-          <Tooltip content="Copy content">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="text-secondary hover:text-primary transition-colors h-6 w-6"
-              onClick={copyTerminalContent}
-            >
-              <Copy className="h-4 w-4" />
-              <span className="sr-only">Copy</span>
-            </Button>
-          </Tooltip>
-          <Tooltip content="Download log">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="text-secondary hover:text-primary transition-colors h-6 w-6"
-              onClick={downloadTerminalContent}
-            >
-              <Download className="h-4 w-4" />
-              <span className="sr-only">Download</span>
-            </Button>
-          </Tooltip>
-          <Tooltip content="Clear terminal">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="text-secondary hover:text-primary transition-colors h-6 w-6"
-              onClick={clearTerminal}
-            >
-              <Trash2 className="h-4 w-4" />
-              <span className="sr-only">Clear</span>
-            </Button>
-          </Tooltip>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="text-secondary hover:text-primary transition-colors h-6 w-6"
+                  onClick={copyTerminalContent}
+                >
+                  <Copy className="h-4 w-4" />
+                  <span className="sr-only">Copy</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Copy content</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="text-secondary hover:text-primary transition-colors h-6 w-6"
+                  onClick={downloadTerminalContent}
+                >
+                  <Download className="h-4 w-4" />
+                  <span className="sr-only">Download</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Download log</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="text-secondary hover:text-primary transition-colors h-6 w-6"
+                  onClick={clearTerminal}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="sr-only">Clear</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Clear terminal</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
       <div 

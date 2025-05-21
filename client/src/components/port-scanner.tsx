@@ -179,7 +179,8 @@ export default function PortScanner({ onScanComplete }: PortScannerProps) {
   };
   
   const handleViewHistory = () => {
-    window.location.href = '/scan-history';
+    // Using window.location for simple navigation
+    window.location.pathname = '/scan-history';
   };
   
   const handleReset = () => {
