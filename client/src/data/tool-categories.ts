@@ -127,6 +127,13 @@ export const tools: Tool[] = [
   
   // Security Testing Tools
   {
+    id: "zap-scanner",
+    name: "OWASP ZAP Scanner",
+    description: "Comprehensive web application vulnerability scanner based on OWASP tools.",
+    category: "security",
+    categoryLabel: "Scanner"
+  },
+  {
     id: "password-checker",
     name: "Password Checker",
     description: "Test password strength and detect common vulnerabilities.",
