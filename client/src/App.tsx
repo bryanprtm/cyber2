@@ -15,6 +15,7 @@ import SqlInjectorPage from "@/pages/tool-detail/sql-injector";
 import ZapScannerPage from "@/pages/tool-detail/zap-scanner";
 import XssDetectorPage from "@/pages/tool-detail/xss-detector";
 import DirectoryScannerPage from "@/pages/tool-detail/directory-scanner";
+import SslScannerPage from "@/pages/tool-detail/ssl-scanner";
 import ScanHistory from "@/pages/scan-history";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
@@ -36,6 +37,7 @@ function Router() {
           <Route path="/tools/zap-scanner" component={ZapScannerPage} />
           <Route path="/tools/xss-detector" component={XssDetectorPage} />
           <Route path="/tools/directory-scanner" component={DirectoryScannerPage} />
+          <Route path="/tools/ssl-scanner" component={SslScannerPage} />
           <Route path="/scan-history" component={ScanHistory} />
           <Route component={NotFound} />
         </Switch>
