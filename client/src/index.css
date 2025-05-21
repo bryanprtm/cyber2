@@ -1,0 +1,212 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 10%;
+    --foreground: 0 0% 95%;
+    --muted: 240 5% 20%;
+    --muted-foreground: 240 5% 65%;
+    --popover: 240 10% 5%;
+    --popover-foreground: 0 0% 95%;
+    --card: 240 10% 8%;
+    --card-foreground: 0 0% 95%;
+    --border: 240 5% 20%;
+    --input: 240 5% 15%;
+    --primary: 142 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 100% 50%;
+    --secondary-foreground: 0 0% 100%;
+    --accent: 0 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --ring: 142 100% 40%;
+    --radius: 0.5rem;
+
+    --terminal-bg: 240 20% 4%;
+    --chart-1: 142 100% 50%;
+    --chart-2: 210 100% 50%;
+    --chart-3: 0 100% 50%;
+    --chart-4: 270 100% 50%;
+    --chart-5: 30 100% 50%;
+
+    --sidebar-background: 240 10% 12%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 142 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 100% 50%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 240 5% 20%;
+    --sidebar-ring: 142 100% 40%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  code, pre, .terminal-text {
+    font-family: 'Fira Code', monospace;
+  }
+}
+
+@layer utilities {
+  .font-tech {
+    font-family: 'Share Tech Mono', monospace;
+  }
+  
+  .font-mono {
+    font-family: 'Roboto Mono', monospace;
+  }
+  
+  .font-code {
+    font-family: 'Fira Code', monospace;
+  }
+
+  .text-glitch {
+    position: relative;
+  }
+  
+  .text-glitch:hover::before {
+    content: attr(data-text);
+    position: absolute;
+    left: -2px;
+    text-shadow: 2px 0 hsl(var(--accent));
+    top: 0;
+    color: hsl(var(--primary));
+    overflow: hidden;
+    clip: rect(0, 900px, 0, 0);
+    animation: glitch-animation 1s infinite linear alternate-reverse;
+  }
+  
+  .matrix-bg {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .matrix-bg::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7));
+    background-size: cover;
+    opacity: 0.4;
+    z-index: -1;
+  }
+
+  .terminal {
+    background-color: hsl(var(--terminal-bg));
+    border: 1px solid hsl(var(--primary) / 0.5);
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+  }
+  
+  .cursor::after {
+    content: "|";
+    animation: blink 1s step-end infinite;
+  }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes glitch-animation {
+  0% {
+    clip: rect(44px, 9999px, 56px, 0);
+  }
+  5% {
+    clip: rect(27px, 9999px, 31px, 0);
+  }
+  10% {
+    clip: rect(37px, 9999px, 50px, 0);
+  }
+  15% {
+    clip: rect(57px, 9999px, 71px, 0);
+  }
+  20% {
+    clip: rect(28px, 9999px, 40px, 0);
+  }
+  25% {
+    clip: rect(25px, 9999px, 32px, 0);
+  }
+  30% {
+    clip: rect(22px, 9999px, 39px, 0);
+  }
+  35% {
+    clip: rect(49px, 9999px, 56px, 0);
+  }
+  40% {
+    clip: rect(12px, 9999px, 30px, 0);
+  }
+  45% {
+    clip: rect(72px, 9999px, 85px, 0);
+  }
+  50% {
+    clip: rect(23px, 9999px, 37px, 0);
+  }
+  55% {
+    clip: rect(59px, 9999px, 78px, 0);
+  }
+  60% {
+    clip: rect(35px, 9999px, 50px, 0);
+  }
+  65% {
+    clip: rect(52px, 9999px, 66px, 0);
+  }
+  70% {
+    clip: rect(13px, 9999px, 25px, 0);
+  }
+  75% {
+    clip: rect(33px, 9999px, 52px, 0);
+  }
+  80% {
+    clip: rect(64px, 9999px, 79px, 0);
+  }
+  85% {
+    clip: rect(7px, 9999px, 19px, 0);
+  }
+  90% {
+    clip: rect(48px, 9999px, 67px, 0);
+  }
+  95% {
+    clip: rect(71px, 9999px, 88px, 0);
+  }
+  100% {
+    clip: rect(15px, 9999px, 29px, 0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { text-shadow: 0 0 5px rgba(0, 255, 65, 0.8); }
+  50% { text-shadow: 0 0 20px rgba(0, 255, 65, 1); }
+}
+
+.glow-text {
+  animation: pulse-glow 2s infinite;
+}
+
+.tool-card {
+  transition: all 0.3s ease;
+}
+
+.tool-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
+}
