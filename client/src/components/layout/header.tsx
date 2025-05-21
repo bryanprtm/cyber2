@@ -34,18 +34,17 @@ export default function Header() {
             <ul className="flex space-x-4 font-tech">
               {navItems.map((item) => (
                 <li key={item.path}>
-                  <Link href={item.path}>
-                    <a 
-                      className={cn(
-                        "transition-colors duration-300 flex items-center",
-                        location === item.path
-                          ? "text-primary"
-                          : "text-foreground hover:text-primary"
-                      )}
-                    >
-                      {item.path === "/scan-history" && <Database className="mr-1 h-3 w-3" />}
-                      {item.name}
-                    </a>
+                  <Link
+                    href={item.path}
+                    className={cn(
+                      "transition-colors duration-300 flex items-center",
+                      location === item.path
+                        ? "text-primary"
+                        : "text-foreground hover:text-primary"
+                    )}
+                  >
+                    {item.path === "/scan-history" && <Database className="mr-1 h-3 w-3" />}
+                    {item.name}
                   </Link>
                 </li>
               ))}

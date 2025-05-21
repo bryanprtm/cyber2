@@ -43,7 +43,7 @@ export default function ToolCard({ id, name, description, category, categoryLabe
         <p className="text-sm font-mono text-muted-foreground mb-3">{description}</p>
       </CardContent>
       <CardFooter className="p-3 pt-0">
-        <a href={id === 'port-scanner' ? '/tools/port-scanner' : '#'} style={{ width: '100%' }}>
+        <a href={`/tools/${id}`} style={{ width: '100%' }}>
           <Button 
             variant="outline" 
             className="w-full bg-primary/10 hover:bg-primary/20 text-primary border-primary/50 font-code text-sm"
