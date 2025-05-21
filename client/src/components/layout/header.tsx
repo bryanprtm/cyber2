@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { MatrixBackground } from "../matrix-background";
+import { BarChart, Database } from "lucide-react";
 
 export default function Header() {
   const [location] = useLocation();
@@ -8,6 +9,7 @@ export default function Header() {
   const navItems = [
     { name: "Home", path: "/" },
     { name: "Tools", path: "/tools" },
+    { name: "Scan History", path: "/scan-history" },
     { name: "Docs", path: "/docs" },
     { name: "About", path: "/about" }
   ];
@@ -26,21 +28,22 @@ export default function Header() {
                 CyberPulse
               </div>
             </Link>
-            <div className="ml-3 text-xs text-secondary font-mono mt-2">v1.0.2_alpha</div>
+            <div className="ml-3 text-xs text-secondary font-mono mt-2">v1.0.3_alpha</div>
           </div>
           <nav className="mt-4 md:mt-0">
-            <ul className="flex space-x-6 font-tech">
+            <ul className="flex space-x-4 font-tech">
               {navItems.map((item) => (
                 <li key={item.path}>
                   <Link href={item.path}>
                     <a 
                       className={cn(
-                        "transition-colors duration-300",
+                        "transition-colors duration-300 flex items-center",
                         location === item.path
                           ? "text-primary"
                           : "text-foreground hover:text-primary"
                       )}
                     >
+                      {item.path === "/scan-history" && <Database className="mr-1 h-3 w-3" />}
                       {item.name}
                     </a>
                   </Link>
