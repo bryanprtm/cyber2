@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 
-export type TerminalLineType = "system" | "info" | "error" | "warning" | "command" | "output";
+export type TerminalLineType = "system" | "info" | "error" | "warning" | "command" | "output" | "success";
 
 export interface TerminalLine {
   content: string;
@@ -12,7 +12,7 @@ export interface TerminalLine {
 export function useTerminal() {
   const [outputLines, setOutputLines] = useState<TerminalLine[]>([
     {
-      content: "[SYSTEM] CyberPulse v1.0.2_alpha initialized",
+      content: "[SYSTEM] CyberPulse v1.0.3_alpha initialized",
       type: "system",
       timestamp: new Date()
     },
@@ -24,6 +24,11 @@ export function useTerminal() {
     {
       content: "[SYSTEM] System ready. Waiting for user input.",
       type: "system",
+      timestamp: new Date()
+    },
+    {
+      content: "[INFO] Database connection established",
+      type: "info",
       timestamp: new Date()
     },
     {
@@ -56,6 +61,10 @@ export function useTerminal() {
   
   const addWarningLine = useCallback((content: string) => {
     addLine(`[WARNING] ${content}`, "warning");
+  }, [addLine]);
+  
+  const addSuccessLine = useCallback((content: string) => {
+    addLine(`[SUCCESS] ${content}`, "success");
   }, [addLine]);
   
   const addCommandLine = useCallback((command: string) => {
@@ -129,6 +138,7 @@ export function useTerminal() {
     addInfoLine,
     addErrorLine,
     addWarningLine,
+    addSuccessLine,
     addCommandLine,
     addOutputLine,
     clearTerminal,

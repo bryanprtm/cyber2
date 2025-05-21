@@ -7,8 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertCircle, Play, RotateCw } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { AlertCircle, Play, RotateCw, Save, Database } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import { apiMutation } from '@/lib/queryClient';
+import { useLocation } from 'wouter';
 
 interface PortScanResult {
   port: number;
@@ -28,6 +32,9 @@ interface PortScannerProps {
   onScanComplete?: (results: any) => void;
 }
 
+// Mocked user ID for demo - would be replaced with actual user auth
+const MOCK_USER_ID = 1;
+
 export default function PortScanner({ onScanComplete }: PortScannerProps) {
   const [target, setTarget] = useState('');
   const [ports, setPorts] = useState('1-1000');
@@ -35,12 +42,16 @@ export default function PortScanner({ onScanComplete }: PortScannerProps) {
   const [concurrent, setConcurrent] = useState(50);
   const [scanMode, setScanMode] = useState('range');
   const [isScanning, setIsScanning] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [results, setResults] = useState<PortScanResult[]>([]);
   const [summary, setSummary] = useState<PortScanSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [saveToDatabase, setSaveToDatabase] = useState(true);
   
   const { isConnected, sendMessage, messageHistory, lastMessage, clearMessages } = useWebSocket();
-  const { addSystemLine, addInfoLine, addErrorLine, addCommandLine } = useTerminal();
+  const { addSystemLine, addInfoLine, addErrorLine, addCommandLine, addSuccessLine } = useTerminal();
+  const { toast } = useToast();
+  const navigate = useNavigate();
   
   // Process incoming WebSocket messages
   useEffect(() => {
@@ -68,6 +79,12 @@ export default function PortScanner({ onScanComplete }: PortScannerProps) {
       case 'scan_complete':
         setIsScanning(false);
         addSystemLine(`Port scan complete`);
+        
+        // Save results to database if option is checked
+        if (saveToDatabase) {
+          saveScanResults(lastMessage.data.results, lastMessage.data.summary);
+        }
+        
         if (onScanComplete) {
           onScanComplete(results);
         }
@@ -79,7 +96,56 @@ export default function PortScanner({ onScanComplete }: PortScannerProps) {
         addErrorLine(lastMessage.data.message);
         break;
     }
-  }, [lastMessage, addSystemLine, addInfoLine, addErrorLine, addCommandLine, target, ports, onScanComplete, results]);
+  }, [lastMessage, addSystemLine, addInfoLine, addErrorLine, addCommandLine, target, ports, onScanComplete, results, saveToDatabase]);
+  
+  // Save scan results to database
+  const saveScanResults = async (scanResults: PortScanResult[], scanSummary: PortScanSummary) => {
+    try {
+      setIsSaving(true);
+      addInfoLine(`Saving scan results to database...`);
+      
+      // Calculate scan duration from results timestamps (in a real app)
+      const scanDuration = ((Math.random() * 5) + 1).toFixed(2); // Mock for demo
+      
+      // Prepare data for API
+      const scanData = {
+        userId: MOCK_USER_ID,
+        toolId: 'port-scanner',
+        target: target,
+        results: scanResults,
+        status: 'completed',
+        duration: scanDuration
+      };
+      
+      // Save to database through our API
+      const response = await apiMutation('POST', '/api/scan/port', {
+        ...scanData,
+        ports,
+        timeout,
+        concurrent
+      });
+      
+      if (response.success) {
+        addSuccessLine(`Scan results saved to database with ID: ${response.scanId || 'unknown'}`);
+        toast({
+          title: "Scan Saved",
+          description: "Results have been stored in the database",
+          variant: "default"
+        });
+      } else {
+        throw new Error(response.message || 'Failed to save scan results');
+      }
+    } catch (error) {
+      addErrorLine(`Failed to save scan results: ${(error as Error).message}`);
+      toast({
+        title: "Save Failed",
+        description: "Could not save results to database",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
   
   // Handle form submission
   const handleScan = () => {
@@ -112,6 +178,10 @@ export default function PortScanner({ onScanComplete }: PortScannerProps) {
     if (success) {
       setIsScanning(true);
     }
+  };
+  
+  const handleViewHistory = () => {
+    navigate('/scan-history');
   };
   
   const handleReset = () => {
@@ -227,6 +297,21 @@ export default function PortScanner({ onScanComplete }: PortScannerProps) {
             />
           </div>
           
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="save-to-db" 
+              checked={saveToDatabase} 
+              onCheckedChange={(checked) => setSaveToDatabase(!!checked)} 
+            />
+            <Label 
+              htmlFor="save-to-db" 
+              className="text-sm font-tech cursor-pointer flex items-center"
+            >
+              <Database className="h-3 w-3 mr-1 text-primary" />
+              Save results to database
+            </Label>
+          </div>
+          
           {error && (
             <div className="bg-destructive/10 p-3 rounded-md border border-destructive/50 text-destructive flex items-start gap-2 text-sm font-mono">
               <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
@@ -234,11 +319,11 @@ export default function PortScanner({ onScanComplete }: PortScannerProps) {
             </div>
           )}
           
-          <div className="flex space-x-4">
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
             <Button
               onClick={handleScan}
-              disabled={isScanning || !target}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 font-tech flex-1"
+              disabled={isScanning || !target || isSaving}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 font-tech"
             >
               <Play className="h-4 w-4 mr-2" />
               {isScanning ? 'Scanning...' : 'Start Scan'}
@@ -247,10 +332,20 @@ export default function PortScanner({ onScanComplete }: PortScannerProps) {
             <Button
               onClick={handleReset}
               variant="outline"
+              disabled={isScanning || isSaving}
               className="border-secondary/50 text-secondary font-tech"
             >
               <RotateCw className="h-4 w-4 mr-2" />
               Reset
+            </Button>
+            
+            <Button
+              onClick={handleViewHistory}
+              variant="outline"
+              className="border-primary/50 text-primary font-tech mt-auto"
+            >
+              <Database className="h-4 w-4 mr-2" />
+              View History
             </Button>
           </div>
         </div>
@@ -258,7 +353,15 @@ export default function PortScanner({ onScanComplete }: PortScannerProps) {
       
       {results.length > 0 && summary && (
         <Card className="p-4 border-secondary/30 bg-card">
-          <h3 className="text-lg font-tech text-secondary mb-4">Scan Results</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-tech text-secondary">Scan Results</h3>
+            {saveToDatabase && (
+              <div className="text-xs font-mono text-green-500 flex items-center">
+                <Database className="h-3 w-3 mr-1" />
+                {isSaving ? 'Saving to database...' : 'Results will be saved'}
+              </div>
+            )}
+          </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             <div className="bg-background p-3 rounded-md border border-primary/30 text-center">
