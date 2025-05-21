@@ -1,73 +1,81 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { portScan, PortScannerOptions } from "./tools/portScanner";
 import { setupWebSocketServer } from "./tools/wsServer";
+import { handlePortScan, getScanHistory } from "./controllers/scanController";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API Routes - all prefixed with /api
   
   // Get available tools
-  app.get("/api/tools", (req, res) => {
-    res.json({
-      success: true,
-      tools: [
-        { id: "port-scanner", name: "Port Scanner", category: "vulnerability" },
-        { id: "sql-injector", name: "SQL Injector", category: "vulnerability" },
-        { id: "xss-detector", name: "XSS Detector", category: "vulnerability" },
-        { id: "dns-lookup", name: "DNS Lookup", category: "network" },
-        { id: "whois-lookup", name: "WHOIS Lookup", category: "info" }
-      ]
-    });
-  });
-  
-  // Port Scanner API - Real implementation
-  app.post("/api/scan/port", async (req, res) => {
-    const { target, ports, timeout, concurrent } = req.body;
-    
-    if (!target) {
-      return res.status(400).json({ success: false, message: "Target is required" });
-    }
-    
-    if (!ports) {
-      return res.status(400).json({ success: false, message: "Ports range is required" });
-    }
-    
+  app.get("/api/tools", async (req, res) => {
     try {
-      const startTime = Date.now();
+      // Get tools from database
+      const toolsFromDb = await storage.getAllTools();
       
-      const options: PortScannerOptions = {
-        target,
-        ports,
-        timeout: timeout || 3000,
-        concurrent: concurrent || 50
-      };
+      // If no tools in database, return default set
+      if (toolsFromDb.length === 0) {
+        return res.json({
+          success: true,
+          tools: [
+            { 
+              toolId: "port-scanner", 
+              name: "Port Scanner", 
+              description: "Scan for open ports on a target host",
+              category: "network", 
+              categoryLabel: "Network"
+            },
+            { 
+              toolId: "sql-injector", 
+              name: "SQL Injection Tester", 
+              description: "Test for SQL injection vulnerabilities",
+              category: "vulnerability", 
+              categoryLabel: "Vulnerability"
+            },
+            { 
+              toolId: "xss-detector", 
+              name: "XSS Detector", 
+              description: "Detect cross-site scripting vulnerabilities",
+              category: "vulnerability", 
+              categoryLabel: "Vulnerability"
+            },
+            { 
+              toolId: "dns-lookup", 
+              name: "DNS Lookup", 
+              description: "Look up DNS records for a domain",
+              category: "information", 
+              categoryLabel: "Information"
+            },
+            { 
+              toolId: "whois-lookup", 
+              name: "WHOIS Lookup", 
+              description: "Look up domain registration information",
+              category: "information", 
+              categoryLabel: "Information"
+            }
+          ]
+        });
+      }
       
-      const results = await portScan(options);
-      const scanDuration = ((Date.now() - startTime) / 1000).toFixed(2);
-      
-      const openPorts = results.filter(r => r.status === 'open');
-      
+      // Return tools from database
       res.json({
         success: true,
-        results: {
-          target,
-          scannedPorts: ports,
-          openPorts: openPorts.map(p => ({ port: p.port, service: p.service })),
-          closedPorts: results.filter(r => r.status === 'closed').length,
-          filteredPorts: results.filter(r => r.status === 'filtered').length,
-          totalPorts: results.length,
-          scanDuration: `${scanDuration}s`
-        }
+        tools: toolsFromDb
       });
     } catch (error) {
-      console.error('Port scan error:', error);
+      console.error('Error fetching tools:', error);
       res.status(500).json({ 
         success: false, 
-        message: `Port scan failed: ${(error as Error).message}` 
+        message: `Failed to fetch tools: ${(error as Error).message}`
       });
     }
   });
+  
+  // Port Scanner API - Using controller with database integration
+  app.post("/api/scan/port", handlePortScan);
+  
+  // Get scan history for a user
+  app.get("/api/scan/history/:userId", getScanHistory);
   
   // HTTP Header Analyzer API
   app.post("/api/analyze/headers", (req, res) => {
