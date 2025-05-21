@@ -11,6 +11,7 @@ import Docs from "@/pages/docs";
 import PortScannerPage from "@/pages/tool-detail/port-scanner";
 import HashGeneratorPage from "@/pages/tool-detail/hash-generator";
 import PasswordGeneratorPage from "@/pages/tool-detail/password-generator";
+import SqlInjectorPage from "@/pages/tool-detail/sql-injector";
 import ScanHistory from "@/pages/scan-history";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
@@ -28,6 +29,7 @@ function Router() {
           <Route path="/tools/port-scanner" component={PortScannerPage} />
           <Route path="/tools/hash-generator" component={HashGeneratorPage} />
           <Route path="/tools/password-generator" component={PasswordGeneratorPage} />
+          <Route path="/tools/sql-injector" component={SqlInjectorPage} />
           <Route path="/scan-history" component={ScanHistory} />
           <Route component={NotFound} />
         </Switch>
