@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { useTerminal } from "@/hooks/use-terminal";
 import { Copy, Download, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tooltip } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface TerminalProps {
   className?: string;
@@ -78,6 +78,7 @@ export default function Terminal({ className }: TerminalProps) {
               line.type === "info" && "text-secondary", 
               line.type === "error" && "text-accent",
               line.type === "warning" && "text-accent",
+              line.type === "success" && "text-green-500",
               line.type === "command" && "text-primary"
             )}
           >

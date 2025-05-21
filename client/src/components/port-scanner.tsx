@@ -12,7 +12,6 @@ import { AlertCircle, Play, RotateCw, Save, Database } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { apiMutation } from '@/lib/queryClient';
-import { useLocation } from 'wouter';
 
 interface PortScanResult {
   port: number;
@@ -49,9 +48,8 @@ export default function PortScanner({ onScanComplete }: PortScannerProps) {
   const [saveToDatabase, setSaveToDatabase] = useState(true);
   
   const { isConnected, sendMessage, messageHistory, lastMessage, clearMessages } = useWebSocket();
-  const { addSystemLine, addInfoLine, addErrorLine, addCommandLine, addSuccessLine } = useTerminal();
+  const { addSystemLine, addInfoLine, addErrorLine, addCommandLine, addLine } = useTerminal();
   const { toast } = useToast();
-  const navigate = useNavigate();
   
   // Process incoming WebSocket messages
   useEffect(() => {
@@ -126,7 +124,7 @@ export default function PortScanner({ onScanComplete }: PortScannerProps) {
       });
       
       if (response.success) {
-        addSuccessLine(`Scan results saved to database with ID: ${response.scanId || 'unknown'}`);
+        addLine(`[SUCCESS] Scan results saved to database with ID: ${response.scanId || 'unknown'}`, "success");
         toast({
           title: "Scan Saved",
           description: "Results have been stored in the database",
@@ -181,7 +179,7 @@ export default function PortScanner({ onScanComplete }: PortScannerProps) {
   };
   
   const handleViewHistory = () => {
-    navigate('/scan-history');
+    window.location.href = '/scan-history';
   };
   
   const handleReset = () => {
