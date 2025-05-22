@@ -191,6 +191,13 @@ export const tools: Tool[] = [
     category: "web",
     categoryLabel: "WebApp"
   },
+  {
+    id: "payload-all-star",
+    name: "Payload All Star",
+    description: "Comprehensive collection of payloads for web exploitation from PayloadsAllTheThings.",
+    category: "web",
+    categoryLabel: "WebApp"
+  },
   
   // Password Tools
   {

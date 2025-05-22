@@ -40,6 +40,7 @@ import XmlInjectorPage from "@/pages/tool-detail/xml-injector";
 import BeefXssPage from "@/pages/tool-detail/beef-xss";
 import Base64EncoderPage from "@/pages/tool-detail/base64-encoder";
 import JsonFormatterPage from "@/pages/tool-detail/json-formatter";
+import PayloadAllStarPage from "@/pages/tool-detail/payload-all-star";
 import ScanHistory from "@/pages/scan-history";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
@@ -85,6 +86,7 @@ function Router() {
           <Route path="/tools/beef-xss" component={BeefXssPage} />
           <Route path="/tools/base64-encoder" component={Base64EncoderPage} />
           <Route path="/tools/json-formatter" component={JsonFormatterPage} />
+          <Route path="/tools/payload-all-star" component={PayloadAllStarPage} />
           <Route path="/scan-history" component={ScanHistory} />
           <Route component={NotFound} />
         </Switch>
