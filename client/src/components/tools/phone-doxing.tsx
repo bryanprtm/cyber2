@@ -715,6 +715,73 @@ export default function PhoneDoxing() {
             </div>
           </div>
           
+          {/* Search Engine Options */}
+          <div className="mt-4">
+            <Label className="mb-2 block">Search Engines</Label>
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="engine-google"
+                  checked={selectedSearchEngines.includes("google")}
+                  onCheckedChange={(checked) => handleSearchEngineChange("google", !!checked)}
+                />
+                <Label htmlFor="engine-google" className="cursor-pointer">Google</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="engine-bing"
+                  checked={selectedSearchEngines.includes("bing")} 
+                  onCheckedChange={(checked) => handleSearchEngineChange("bing", !!checked)}
+                />
+                <Label htmlFor="engine-bing" className="cursor-pointer">Bing</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="engine-social"
+                  checked={selectedSearchEngines.includes("socialMedia")}
+                  onCheckedChange={(checked) => handleSearchEngineChange("socialMedia", !!checked)}
+                />
+                <Label htmlFor="engine-social" className="cursor-pointer">Social Platforms</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="engine-forums"
+                  checked={selectedSearchEngines.includes("forums")}
+                  onCheckedChange={(checked) => handleSearchEngineChange("forums", !!checked)}
+                />
+                <Label htmlFor="engine-forums" className="cursor-pointer">Forums & Boards</Label>
+              </div>
+            </div>
+          </div>
+          
+          {/* Search Depth */}
+          <div className="mt-4">
+            <Label className="mb-2 block">Search Depth</Label>
+            <div className="flex gap-3">
+              <Button 
+                size="sm" 
+                variant={webSearchDepth === "basic" ? "default" : "outline"}
+                onClick={() => handleSearchDepthChange("basic")}
+              >
+                Basic
+              </Button>
+              <Button 
+                size="sm" 
+                variant={webSearchDepth === "deep" ? "default" : "outline"}
+                onClick={() => handleSearchDepthChange("deep")}
+              >
+                Deep
+              </Button>
+              <Button 
+                size="sm" 
+                variant={webSearchDepth === "comprehensive" ? "default" : "outline"}
+                onClick={() => handleSearchDepthChange("comprehensive")}
+              >
+                Comprehensive
+              </Button>
+            </div>
+          </div>
+          
           {/* Disclaimer */}
           <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-md p-3 text-sm">
             <div className="flex items-start">
