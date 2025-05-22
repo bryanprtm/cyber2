@@ -817,10 +817,11 @@ export default function PhoneDoxing() {
               </div>
               
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid grid-cols-3 mb-4">
+                <TabsList className="grid grid-cols-4 mb-4">
                   <TabsTrigger value="basic" className="font-tech">Basic Info</TabsTrigger>
                   <TabsTrigger value="owner" className="font-tech">Owner Data</TabsTrigger>
                   <TabsTrigger value="activity" className="font-tech">Activity & Records</TabsTrigger>
+                  <TabsTrigger value="web" className="font-tech">Web Search</TabsTrigger>
                 </TabsList>
                 
                 {/* Basic Info Tab */}
@@ -1028,6 +1029,146 @@ export default function PhoneDoxing() {
                     <div className="text-center py-4 text-muted-foreground">
                       <FileText className="h-8 w-8 mx-auto mb-2 opacity-30" />
                       <p>No public records found</p>
+                    </div>
+                  )}
+                </TabsContent>
+                
+                {/* Web Search Results Tab */}
+                <TabsContent value="web" className="space-y-4">
+                  {/* Web Search Results */}
+                  {result.webResults && result.webResults.length > 0 ? (
+                    <div className="mb-6">
+                      <h4 className="text-sm font-semibold mb-2">Web Search Results</h4>
+                      <div className="space-y-4">
+                        {result.webResults.map((webResult, index) => (
+                          <div key={index} className="bg-card border border-border/50 rounded-md p-4">
+                            <div className="flex justify-between items-start mb-2">
+                              <h4 className="text-primary font-medium">{webResult.title}</h4>
+                              <Badge variant="outline" className="text-xs">
+                                {webResult.source.charAt(0).toUpperCase() + webResult.source.slice(1)}
+                              </Badge>
+                            </div>
+                            <p className="text-sm mb-2 text-muted-foreground">{webResult.url}</p>
+                            <p className="text-sm">{webResult.snippet}</p>
+                            <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
+                              <span>{webResult.timestamp}</span>
+                              <span className="flex items-center gap-1">
+                                {webResult.type === 'web' && <Globe size={12} />}
+                                {webResult.type === 'social' && <Link size={12} />}
+                                {webResult.type === 'forum' && <Hash size={12} />}
+                                {webResult.type === 'news' && <Newspaper size={12} />}
+                                {webResult.type}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                  
+                  {/* Social Media Mentions */}
+                  {result.socialMediaMentions && result.socialMediaMentions.length > 0 ? (
+                    <div className="mb-6">
+                      <h4 className="text-sm font-semibold mb-2">Social Media Mentions</h4>
+                      <div className="space-y-4">
+                        {result.socialMediaMentions.map((mention, index) => (
+                          <div key={index} className="bg-card border border-border/50 rounded-md p-4">
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="flex items-center gap-2">
+                                {mention.platform === 'Twitter' && <Twitter size={16} className="text-blue-400" />}
+                                {mention.platform === 'Facebook' && <Facebook size={16} className="text-blue-600" />}
+                                {mention.platform === 'Instagram' && <Instagram size={16} className="text-pink-500" />}
+                                {mention.platform === 'LinkedIn' && <Linkedin size={16} className="text-blue-700" />}
+                                <h4 className="text-primary font-medium">{mention.username || "User"}</h4>
+                              </div>
+                              <Badge variant="outline" className="text-xs">{mention.platform}</Badge>
+                            </div>
+                            {mention.content && <p className="text-sm mb-2">{mention.content}</p>}
+                            <p className="text-sm text-muted-foreground">{mention.url}</p>
+                            <div className="mt-2 text-xs text-muted-foreground">
+                              <span>{mention.date}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                  
+                  {/* Leaked Databases */}
+                  {result.leakedDatabases && result.leakedDatabases.length > 0 ? (
+                    <div className="mb-6">
+                      <h4 className="text-sm font-semibold mb-2">Leaked Databases</h4>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Database</TableHead>
+                            <TableHead>Leak Date</TableHead>
+                            <TableHead>Data Types</TableHead>
+                            <TableHead>Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {result.leakedDatabases.map((db, index) => (
+                            <TableRow key={index}>
+                              <TableCell>{db.databaseName}</TableCell>
+                              <TableCell>{db.leakDate}</TableCell>
+                              <TableCell>
+                                <div className="flex flex-wrap gap-1">
+                                  {db.dataTypes.map((type, i) => (
+                                    <Badge key={i} variant="outline" className="text-xs">
+                                      {type}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {db.confirmed ? (
+                                  <span className="flex items-center text-red-500 text-xs">
+                                    <AlertCircle size={12} className="mr-1" /> Confirmed
+                                  </span>
+                                ) : (
+                                  <span className="flex items-center text-yellow-500 text-xs">
+                                    <AlertTriangle size={12} className="mr-1" /> Unconfirmed
+                                  </span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  ) : null}
+                  
+                  {/* Image Results */}
+                  {result.imageResults && result.imageResults.length > 0 ? (
+                    <div className="mb-6">
+                      <h4 className="text-sm font-semibold mb-2">Image Results</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {result.imageResults.map((image, index) => (
+                          <div key={index} className="bg-card border border-border/50 rounded-md overflow-hidden">
+                            <div className="aspect-video bg-muted relative">
+                              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                                <Image className="h-8 w-8 opacity-20" />
+                              </div>
+                            </div>
+                            <div className="p-3">
+                              <h4 className="text-sm font-medium truncate">{image.title}</h4>
+                              <p className="text-xs text-muted-foreground mt-1">{image.source}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                  
+                  {(!result.webResults || result.webResults.length === 0) && 
+                   (!result.socialMediaMentions || result.socialMediaMentions.length === 0) &&
+                   (!result.imageResults || result.imageResults.length === 0) &&
+                   (!result.leakedDatabases || result.leakedDatabases.length === 0) && (
+                    <div className="text-center py-4 text-muted-foreground">
+                      <Search className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                      <p>No web search results found</p>
+                      <p className="text-sm mt-2">Try enabling more search engines or increasing search depth</p>
                     </div>
                   )}
                 </TabsContent>
