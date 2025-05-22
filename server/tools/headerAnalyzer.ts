@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { AxiosResponse } from 'axios';
 
 export interface HeaderAnalyzerOptions {
   url: string;
@@ -24,7 +25,7 @@ export interface HeaderAnalysisResult {
   serverInfo: {
     server?: string;
     poweredBy?: string;
-    technology?: string;
+    technology?: string | undefined;
   };
   redirectChain?: Array<{
     url: string;
@@ -49,43 +50,145 @@ export interface HeaderAnalysisResult {
   };
 }
 
-// Security headers metadata for analysis
-const SECURITY_HEADERS = {
+// Security headers metadata for analysis with detailed recommendations and grading
+const SECURITY_HEADERS: Record<string, { 
+  description: string; 
+  recommendation: string;
+  importance: 'critical' | 'high' | 'medium' | 'low';
+  validator?: (value: string) => { valid: boolean; reason?: string; };
+}> = {
   'Strict-Transport-Security': {
-    description: 'Enforces HTTPS usage to prevent downgrade attacks',
-    recommendation: 'Add header with value: max-age=31536000; includeSubDomains'
+    description: 'Enforces HTTPS usage to prevent protocol downgrade attacks and cookie hijacking',
+    recommendation: 'Add header with value: max-age=31536000; includeSubDomains; preload',
+    importance: 'critical',
+    validator: (value: string) => {
+      const maxAgeMatch = value.match(/max-age=(\d+)/);
+      if (!maxAgeMatch) return { valid: false, reason: 'Missing max-age directive' };
+      
+      const maxAge = parseInt(maxAgeMatch[1], 10);
+      if (maxAge < 31536000) { // 1 year in seconds
+        return { valid: false, reason: 'max-age should be at least 31536000 (1 year)' };
+      }
+      
+      if (!value.includes('includeSubDomains')) {
+        return { valid: false, reason: 'Missing includeSubDomains directive' };
+      }
+      
+      return { valid: true };
+    }
   },
   'Content-Security-Policy': {
-    description: 'Prevents XSS attacks by restricting resource loading',
-    recommendation: 'Add a content security policy that restricts resources to trusted sources'
+    description: 'Prevents XSS attacks by specifying which dynamic resources are allowed to load',
+    recommendation: 'Implement a strict CSP that disallows unsafe-inline and unsafe-eval',
+    importance: 'critical',
+    validator: (value: string) => {
+      if (value.includes("'unsafe-inline'") || value.includes("'unsafe-eval'")) {
+        return { valid: false, reason: 'Contains unsafe-inline or unsafe-eval directives' };
+      }
+      if (value.includes('*')) {
+        return { valid: false, reason: 'Contains wildcard (*) sources which weaken security' };
+      }
+      return { valid: true };
+    }
   },
   'X-Content-Type-Options': {
-    description: 'Prevents MIME-sniffing attacks',
-    recommendation: 'Add header with value: nosniff'
+    description: 'Prevents browsers from MIME-sniffing a response away from the declared content-type',
+    recommendation: 'Add header with value: nosniff',
+    importance: 'high',
+    validator: (value: string) => {
+      return { valid: value.toLowerCase() === 'nosniff' };
+    }
   },
   'X-Frame-Options': {
-    description: 'Prevents clickjacking attacks by restricting iframe usage',
-    recommendation: 'Add header with value: DENY or SAMEORIGIN'
+    description: 'Prevents clickjacking attacks by restricting who can put this site in a frame',
+    recommendation: 'Add header with value: DENY or SAMEORIGIN',
+    importance: 'high',
+    validator: (value: string) => {
+      const upperValue = value.toUpperCase();
+      return { valid: ['DENY', 'SAMEORIGIN'].includes(upperValue) };
+    }
   },
   'X-XSS-Protection': {
-    description: 'Additional protection against XSS attacks',
-    recommendation: 'Add header with value: 1; mode=block'
+    description: 'Legacy cross-site scripting filter for older browsers (mostly obsolete with proper CSP)',
+    recommendation: 'Add header with value: 1; mode=block',
+    importance: 'medium',
+    validator: (value: string) => {
+      return { valid: value === '1; mode=block' };
+    }
   },
   'Referrer-Policy': {
     description: 'Controls how much referrer information is included with requests',
-    recommendation: 'Add header with value: strict-origin-when-cross-origin'
+    recommendation: 'Add header with value: strict-origin-when-cross-origin',
+    importance: 'medium',
+    validator: (value: string) => {
+      const safePolicies = [
+        'no-referrer',
+        'no-referrer-when-downgrade',
+        'strict-origin',
+        'strict-origin-when-cross-origin'
+      ];
+      return { valid: safePolicies.includes(value.toLowerCase()) };
+    }
   },
   'Permissions-Policy': {
-    description: 'Controls which browser features can be used (formerly Feature-Policy)',
-    recommendation: 'Configure permissions to only allow needed features'
+    description: 'Allows a site to control which features and APIs can be used (formerly Feature-Policy)',
+    recommendation: 'Configure to restrict sensitive browser features',
+    importance: 'medium'
+  },
+  'Cross-Origin-Opener-Policy': {
+    description: 'Controls if a window opener retains references to newly opened windows',
+    recommendation: 'Add header with value: same-origin',
+    importance: 'medium',
+    validator: (value: string) => {
+      return { valid: ['same-origin', 'same-origin-allow-popups'].includes(value.toLowerCase()) };
+    }
+  },
+  'Cross-Origin-Embedder-Policy': {
+    description: 'Prevents a document from loading any cross-origin resources that don\'t explicitly grant the document permission',
+    recommendation: 'Add header with value: require-corp',
+    importance: 'medium'
+  },
+  'Cross-Origin-Resource-Policy': {
+    description: 'Prevents other origins from reading the response of the resources to which this header is applied',
+    recommendation: 'Add header with value: same-origin',
+    importance: 'medium'
   },
   'Cache-Control': {
-    description: 'Controls how responses are cached',
-    recommendation: 'Set appropriate caching directives for sensitive content'
+    description: 'Controls how responses are cached by browsers and proxies',
+    recommendation: 'For sensitive content: no-store, max-age=0',
+    importance: 'medium',
+    validator: (value: string) => {
+      if (value.includes('public') && !value.includes('no-store')) {
+        return { valid: false, reason: 'Public cache without no-store may expose sensitive data' };
+      }
+      return { valid: true };
+    }
+  },
+  'Clear-Site-Data': {
+    description: 'Clears browsing data (cookies, storage, cache) associated with the requesting website',
+    recommendation: 'For logout pages, use: "cache", "cookies", "storage"',
+    importance: 'low'
   },
   'Access-Control-Allow-Origin': {
-    description: 'Controls which domains can access the resource via CORS',
-    recommendation: 'Restrict to specific trusted domains instead of using wildcard (*)'
+    description: 'Controls which domains can access resources via CORS',
+    recommendation: 'Only allow specific trusted domains instead of using wildcard (*)',
+    importance: 'high',
+    validator: (value: string) => {
+      return { valid: value !== '*', reason: value === '*' ? 'Wildcard (*) allows any domain to access the resource' : undefined };
+    }
+  },
+  'Access-Control-Allow-Credentials': {
+    description: 'Controls if CORS requests can include credentials (cookies, auth headers)',
+    recommendation: 'Only set to true if absolutely necessary and with strict CORS origin policy',
+    importance: 'high',
+    validator: (value: string) => {
+      return { valid: value !== 'true' || true, reason: value === 'true' ? 'Allowing credentials should be done with caution' : undefined };
+    }
+  },
+  'Expect-CT': {
+    description: 'Certificate Transparency policy enforcement (being deprecated in favor of HSTS preloading)',
+    recommendation: 'enforce, max-age=30',
+    importance: 'low'
   }
 };
 
