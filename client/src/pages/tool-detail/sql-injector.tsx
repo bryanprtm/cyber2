@@ -5,22 +5,22 @@ import { MatrixBackground } from "@/components/matrix-background";
 import Terminal from "@/components/terminal";
 
 export default function SqlInjectorPage() {
-  const { addSystemLine, addInfoLine } = useTerminal();
+  const terminal = useTerminal();
 
   useEffect(() => {
     // Add some initial terminal messages when the page loads
-    addSystemLine("SQL Injection Test module initialized");
-    addInfoLine("Ready to test web applications for SQL injection vulnerabilities.");
-  }, [addSystemLine, addInfoLine]);
+    terminal.addSystemLine("SQL Injection Testing module initialized");
+    terminal.addInfoLine("Ready to test target for SQL injection vulnerabilities.");
+  }, [terminal]);
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="relative mb-8 p-6 rounded-lg overflow-hidden">
         <MatrixBackground />
-        <h1 className="text-3xl font-tech mb-4 text-center text-primary">SQL Injection Tester</h1>
+        <h1 className="text-3xl font-tech mb-4 text-center text-primary">SQL Injection Testing Tool</h1>
         <p className="text-center font-mono text-muted-foreground max-w-2xl mx-auto">
-          Test web applications for SQL injection vulnerabilities. This tool is for educational 
-          purposes only and demonstrates different SQL injection techniques.
+          Detect SQL injection vulnerabilities in web applications that could allow attackers
+          to access, modify, or delete data in your database.
         </p>
       </div>
 
@@ -31,51 +31,35 @@ export default function SqlInjectorPage() {
         
         <div className="lg:col-span-1">
           <div className="bg-card border border-secondary/30 rounded-md p-4 mb-6">
-            <h2 className="text-xl font-tech text-secondary mb-4">What is SQL Injection?</h2>
-            <div className="space-y-4 text-sm font-mono">
+            <h2 className="text-xl font-tech text-secondary mb-4">About SQL Injection</h2>
+            <div className="space-y-3 text-sm font-mono">
               <p>
-                SQL injection is a code injection technique where malicious SQL statements are 
-                inserted into entry fields for execution by the database backend.
+                SQL Injection (SQLi) is a code injection technique where an attacker inserts malicious
+                SQL statements into input fields for execution by the underlying database.
               </p>
               <p>
-                <span className="text-primary">Common vulnerabilities</span> include:
-                <ul className="list-disc list-inside mt-2 ml-2 space-y-1">
-                  <li>Unsanitized user input</li>
-                  <li>Dynamic SQL queries</li>
-                  <li>Improper error handling</li>
-                  <li>Insufficient input validation</li>
-                  <li>Overly privileged database users</li>
-                </ul>
+                Common attack vectors include:
               </p>
-              <p>
-                <span className="text-accent">Prevention methods</span> include using 
-                parameterized queries, stored procedures, ORMs, and input validation.
-              </p>
+              <div className="ml-2 space-y-1">
+                <p>• <span className="text-amber-500">Error-based</span>: Forces the database to generate an error revealing information</p>
+                <p>• <span className="text-amber-500">Union-based</span>: Uses UNION operator to combine results with another query</p>
+                <p>• <span className="text-amber-500">Blind</span>: Asks the database true/false questions to extract data</p>
+                <p>• <span className="text-amber-500">Time-based</span>: Uses time delays to extract information</p>
+              </div>
+              <div className="p-2 rounded-md bg-red-500/10 mt-2 border border-red-500/20">
+                <p className="text-xs text-red-500">
+                  <span className="font-bold">Warning:</span> This tool is for educational purposes and authorized security testing only.
+                  Always obtain proper authorization before testing applications.
+                </p>
+              </div>
             </div>
           </div>
           
           <div className="bg-card border border-accent/30 rounded-md p-4">
-            <h2 className="text-xl font-tech text-accent mb-4">Ethical Considerations</h2>
-            <p className="text-sm font-mono text-muted-foreground">
-              This tool is provided for educational purposes only. SQL injection testing without 
-              explicit permission is illegal and unethical. Always obtain proper authorization 
-              before testing web applications for security vulnerabilities.
-            </p>
-            <div className="mt-4 p-3 bg-background/50 rounded-md text-xs font-mono border border-border">
-              <code className="text-primary">
-                // Proper way to prevent SQL injection in code:<br />
-                const query = 'SELECT * FROM users WHERE id = ?';<br />
-                db.execute(query, [userId]);<br />
-                // Instead of:<br />
-                // db.execute('SELECT * FROM users WHERE id = ' + userId);
-              </code>
-            </div>
+            <h2 className="text-lg font-tech text-accent mb-4">Terminal Output</h2>
+            <Terminal className="h-80 text-xs" lines={terminal.lines} />
           </div>
         </div>
-      </div>
-      
-      <div className="mt-6">
-        <Terminal className="h-80" />
       </div>
     </div>
   );

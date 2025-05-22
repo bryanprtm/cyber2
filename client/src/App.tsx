@@ -50,7 +50,6 @@ function Router() {
           <Route path="/tools/port-scanner" component={PortScannerPage} />
           <Route path="/tools/hash-generator" component={HashGeneratorPage} />
           <Route path="/tools/password-generator" component={PasswordGeneratorPage} />
-          <Route path="/tools/sql-injector" component={SqlInjectorPage} />
           <Route path="/tools/zap-scanner" component={ZapScannerPage} />
           <Route path="/tools/xss-detector" component={XssDetectorPage} />
           <Route path="/tools/directory-scanner" component={DirectoryScannerPage} />
@@ -71,6 +70,7 @@ function Router() {
           <Route path="/tools/url-scanner" component={UrlScannerPage} />
           <Route path="/tools/cors-tester" component={CorsTesterPage} />
           <Route path="/tools/lfi-scanner" component={LfiScannerPage} />
+          <Route path="/tools/sql-injector" component={SqlInjectorPage} />
           <Route path="/scan-history" component={ScanHistory} />
           <Route component={NotFound} />
         </Switch>
