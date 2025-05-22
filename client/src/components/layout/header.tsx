@@ -9,6 +9,7 @@ export default function Header() {
   const navItems = [
     { name: "Home", path: "/" },
     { name: "Tools", path: "/tools" },
+    { name: "Security Dashboard", path: "/security-dashboard" },
     { name: "Scan History", path: "/scan-history" },
     { name: "Docs", path: "/docs" },
     { name: "About", path: "/about" }
