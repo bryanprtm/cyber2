@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupWebSocketServer } from "./tools/wsServer";
 import { handlePortScan, handlePingSweep, getScanHistory } from "./controllers/scanController";
 import { handleHeaderAnalysis } from "./controllers/headerAnalyzerController";
+import { handleEmailHunting } from "./controllers/emailHunterController";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API Routes - all prefixed with /api
@@ -85,6 +86,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/scan/history/:userId", getScanHistory);
   
   // Header Analyzer API is now handled by the controller at line 82
+  
+  // Email Hunter API 
+  app.post("/api/scan/email-hunter", handleEmailHunting);
   
   // Note: WHOIS Lookup API is now handled by the controller at line 82
   

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import cheerio from 'cheerio';
+import * as cheerio from 'cheerio';
 
 export interface EmailHunterOptions {
   url: string;
@@ -107,9 +107,9 @@ export async function findEmails(options: EmailHunterOptions): Promise<EmailHunt
       const obfuscatedMatches = text.match(obfuscatedEmailRegex) || [];
       
       // Process the email matches
-      emailMatches.forEach(email => {
-        email = email.toLowerCase().trim();
-        foundEmails.add(email);
+      emailMatches.forEach((email: string) => {
+        const formattedEmail = email.toLowerCase().trim();
+        foundEmails.add(formattedEmail);
         
         if (!emailSources[email]) {
           emailSources[email] = [];
