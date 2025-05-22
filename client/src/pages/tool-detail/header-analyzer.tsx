@@ -103,7 +103,7 @@ export default function HeaderAnalyzerPage() {
     
     if (!isValidUrl(normalizedUrl)) {
       setError('Invalid URL format. Example: https://example.com');
-      addErrorLine('Error: Invalid URL format. Example: https://example.com');
+      addErrorLine('error', 'Error: Invalid URL format. Example: https://example.com');
       return;
     }
 
