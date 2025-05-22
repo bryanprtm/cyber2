@@ -745,9 +745,8 @@ export default function PacketAnalyzer({ onCaptureComplete }: PacketAnalyzerProp
                         {new Date(packet.timestamp).toLocaleTimeString([], {
                           hour: '2-digit',
                           minute: '2-digit',
-                          second: '2-digit',
-                          fractionalSecondDigits: 3
-                        })}
+                          second: '2-digit'
+                        }) + '.' + new Date(packet.timestamp).getMilliseconds().toString().padStart(3, '0')}
                       </div>
                       <div className="col-span-1">
                         <Badge className={cn("px-1.5 py-0 text-[10px]", getProtocolColor(packet.protocol))}>
@@ -804,9 +803,8 @@ export default function PacketAnalyzer({ onCaptureComplete }: PacketAnalyzerProp
                             {new Date(selectedPacket.timestamp).toLocaleTimeString([], {
                               hour: '2-digit', 
                               minute: '2-digit', 
-                              second: '2-digit',
-                              fractionalSecondDigits: 6
-                            })}
+                              second: '2-digit'
+                            }) + '.' + new Date(selectedPacket.timestamp).getMilliseconds().toString().padStart(3, '0')}
                           </span>
                         </div>
                         <div className="flex justify-between">
