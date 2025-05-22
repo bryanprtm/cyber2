@@ -8,7 +8,19 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { AlertCircle, Play, RotateCw, Save, Database } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { 
+  AlertCircle, 
+  Play, 
+  RotateCw, 
+  Save, 
+  Database,
+  Clock,
+  Zap,
+  Activity,
+  BarChart
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { apiMutation } from '@/lib/queryClient';
@@ -46,11 +58,79 @@ export default function PortScanner({ onScanComplete }: PortScannerProps) {
   const [summary, setSummary] = useState<PortScanSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saveToDatabase, setSaveToDatabase] = useState(true);
+  const [scanProgress, setScanProgress] = useState<number>(0);
+  const [scanStats, setScanStats] = useState<{
+    portsScanned: number;
+    portsTotal: number;
+    startTime: number;
+    elapsedTime: string;
+    estimatedTimeRemaining: string;
+    rate: number;
+  }>({
+    portsScanned: 0,
+    portsTotal: 0,
+    startTime: 0,
+    elapsedTime: "0s",
+    estimatedTimeRemaining: "Calculating...",
+    rate: 0
+  });
+  const [activityLog, setActivityLog] = useState<{
+    message: string;
+    timestamp: Date;
+    type: 'info' | 'success' | 'warning' | 'error' | 'progress';
+  }[]>([]);
   
   const { isConnected, sendMessage, messageHistory, lastMessage, clearMessages } = useWebSocket();
   const { addSystemLine, addInfoLine, addErrorLine, addCommandLine, addLine } = useTerminal();
   const { toast } = useToast();
   
+  // Update scan statistics and timer
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
+    if (isScanning && scanStats.startTime > 0) {
+      timer = setInterval(() => {
+        const now = Date.now();
+        const elapsedMs = now - scanStats.startTime;
+        const elapsedSeconds = Math.floor(elapsedMs / 1000);
+        
+        // Format elapsed time
+        const minutes = Math.floor(elapsedSeconds / 60);
+        const seconds = elapsedSeconds % 60;
+        const elapsedTime = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+        
+        // Calculate scan rate (ports per second)
+        const rate = elapsedSeconds > 0 ? Math.round(scanStats.portsScanned / elapsedSeconds) : 0;
+        
+        // Estimate time remaining
+        let estimatedTimeRemaining = "Calculating...";
+        if (rate > 0 && scanStats.portsTotal > 0) {
+          const remainingPorts = scanStats.portsTotal - scanStats.portsScanned;
+          const remainingSeconds = Math.ceil(remainingPorts / rate);
+          
+          if (remainingSeconds > 60) {
+            const mins = Math.floor(remainingSeconds / 60);
+            const secs = remainingSeconds % 60;
+            estimatedTimeRemaining = `~${mins}m ${secs}s`;
+          } else {
+            estimatedTimeRemaining = `~${remainingSeconds}s`;
+          }
+        }
+        
+        setScanStats(prev => ({
+          ...prev,
+          elapsedTime,
+          estimatedTimeRemaining,
+          rate
+        }));
+      }, 1000);
+    }
+    
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isScanning, scanStats.startTime, scanStats.portsScanned, scanStats.portsTotal]);
+
   // Process incoming WebSocket messages
   useEffect(() => {
     if (!lastMessage) return;
@@ -67,6 +147,69 @@ export default function PortScanner({ onScanComplete }: PortScannerProps) {
         setResults([]);
         setSummary(null);
         setError(null);
+        setScanProgress(0);
+        
+        // Initialize scan statistics
+        const portsTotal = lastMessage.data.totalPorts || 0;
+        setScanStats({
+          portsScanned: 0,
+          portsTotal,
+          startTime: Date.now(),
+          elapsedTime: "0s",
+          estimatedTimeRemaining: "Calculating...",
+          rate: 0
+        });
+        
+        // Clear previous activity log and add initial entry
+        setActivityLog([{
+          message: `Scan started on ${target} (${ports})`,
+          timestamp: new Date(),
+          type: 'info'
+        }]);
+        break;
+        
+      case 'scan_progress':
+        // Update scan progress
+        const progressData = lastMessage.data;
+        const { completed, total, port, status } = progressData;
+        
+        // Calculate percentage progress
+        const progressPercent = Math.floor((completed / total) * 100);
+        setScanProgress(progressPercent);
+        
+        // Update scan stats
+        setScanStats(prev => ({
+          ...prev,
+          portsScanned: completed,
+          portsTotal: total
+        }));
+        
+        // Add to activity log (but not for every port to avoid flooding)
+        if (status === 'open' || (completed % Math.max(Math.floor(total / 50), 1) === 0)) {
+          setActivityLog(prev => {
+            const newLog = {
+              message: status === 'open' 
+                ? `Found open port: ${port}${progressData.service ? ` (${progressData.service})` : ''}` 
+                : `Scanned ${completed}/${total} ports (${progressPercent}%)`,
+              timestamp: new Date(),
+              type: status === 'open' ? 'success' : 'progress' as any
+            };
+            
+            // Keep log size manageable (latest 100 entries)
+            const updatedLog = [newLog, ...prev].slice(0, 100);
+            return updatedLog;
+          });
+          
+          // Log open ports to terminal for visibility
+          if (status === 'open') {
+            addLine(`Found open port: ${port}${progressData.service ? ` (${progressData.service})` : ''}`, "success");
+          }
+          
+          // Occasionally update scan progress in terminal
+          if (completed % Math.max(Math.floor(total / 10), 1) === 0) {
+            addInfoLine(`Scan progress: ${progressPercent}% (${completed}/${total} ports)`);
+          }
+        }
         break;
         
       case 'scan_results':
@@ -77,6 +220,13 @@ export default function PortScanner({ onScanComplete }: PortScannerProps) {
       case 'scan_complete':
         setIsScanning(false);
         addSystemLine(`Port scan complete`);
+        
+        // Add final log entry
+        setActivityLog(prev => [{
+          message: `Scan completed in ${scanStats.elapsedTime}`,
+          timestamp: new Date(),
+          type: 'info'
+        }, ...prev]);
         
         // Save results to database if option is checked
         if (saveToDatabase) {
@@ -92,6 +242,13 @@ export default function PortScanner({ onScanComplete }: PortScannerProps) {
         setIsScanning(false);
         setError(lastMessage.data.message);
         addErrorLine(lastMessage.data.message);
+        
+        // Add to activity log
+        setActivityLog(prev => [{
+          message: `Error: ${lastMessage.data.message}`,
+          timestamp: new Date(),
+          type: 'error'
+        }, ...prev]);
         break;
     }
   }, [lastMessage, addSystemLine, addInfoLine, addErrorLine, addCommandLine, target, ports, onScanComplete, results, saveToDatabase]);
@@ -350,16 +507,99 @@ export default function PortScanner({ onScanComplete }: PortScannerProps) {
         </div>
       </Card>
       
+      {/* Scan Progress Section */}
+      {isScanning && (
+        <Card className="p-4 border-primary/30 bg-card">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-tech text-primary flex items-center">
+              <Activity className="h-4 w-4 mr-2" />
+              Scan Progress
+            </h3>
+            <div className="text-xs font-mono flex items-center gap-2">
+              <Badge variant="outline" className="bg-primary/10 text-primary">
+                <Clock className="h-3 w-3 mr-1" />
+                {scanStats.elapsedTime}
+              </Badge>
+              <Badge variant="outline" className="bg-secondary/10 text-secondary">
+                <Zap className="h-3 w-3 mr-1" />
+                {scanStats.rate} ports/sec
+              </Badge>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs font-mono">
+                <span>Scanning ports... {scanProgress}%</span>
+                <span>{scanStats.portsScanned} / {scanStats.portsTotal} ports</span>
+              </div>
+              <Progress value={scanProgress} className="h-2" />
+              <div className="flex justify-between text-xs font-mono text-muted-foreground">
+                <span>ETA: {scanStats.estimatedTimeRemaining}</span>
+                <span>Target: {target}</span>
+              </div>
+            </div>
+            
+            <div className="border border-border rounded-md">
+              <div className="bg-muted p-2 flex justify-between items-center font-tech text-xs border-b border-border">
+                <div>Activity Log</div>
+                <div className="flex items-center">
+                  <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse mr-2"></div>
+                  <span>Live</span>
+                </div>
+              </div>
+              
+              <div className="max-h-48 overflow-y-auto p-2 space-y-1 bg-black/30">
+                {activityLog.map((entry, index) => (
+                  <div 
+                    key={index} 
+                    className={cn(
+                      "text-xs font-mono flex items-start p-1 rounded",
+                      entry.type === 'success' && "text-green-400",
+                      entry.type === 'error' && "text-red-400",
+                      entry.type === 'warning' && "text-yellow-400",
+                      entry.type === 'info' && "text-blue-400",
+                      entry.type === 'progress' && "text-muted-foreground"
+                    )}
+                  >
+                    <span className="opacity-70 mr-2 flex-shrink-0">
+                      {entry.timestamp.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'})}
+                    </span>
+                    <span>{entry.message}</span>
+                  </div>
+                ))}
+                {activityLog.length === 0 && (
+                  <div className="text-xs font-mono text-muted-foreground p-2">
+                    No activity yet. Waiting for scan to start...
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+      
+      {/* Scan Results Section */}
       {results.length > 0 && summary && (
         <Card className="p-4 border-secondary/30 bg-card">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-tech text-secondary">Scan Results</h3>
-            {saveToDatabase && (
-              <div className="text-xs font-mono text-green-500 flex items-center">
-                <Database className="h-3 w-3 mr-1" />
-                {isSaving ? 'Saving to database...' : 'Results will be saved'}
-              </div>
-            )}
+            <h3 className="text-lg font-tech text-secondary flex items-center">
+              <BarChart className="h-4 w-4 mr-2" />
+              Scan Results
+            </h3>
+            <div className="flex items-center gap-2">
+              {saveToDatabase && (
+                <div className="text-xs font-mono text-green-500 flex items-center">
+                  <Database className="h-3 w-3 mr-1" />
+                  {isSaving ? 'Saving to database...' : 'Results saved'}
+                </div>
+              )}
+              {!isScanning && scanStats.elapsedTime !== "0s" && (
+                <Badge variant="outline" className="bg-primary/5 text-xs">
+                  Completed in {scanStats.elapsedTime}
+                </Badge>
+              )}
+            </div>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -421,6 +661,12 @@ export default function PortScanner({ onScanComplete }: PortScannerProps) {
                     </div>
                   </div>
                 ))}
+                
+              {results.filter(result => result.status === 'open').length === 0 && (
+                <div className="p-4 text-center text-xs font-mono text-muted-foreground">
+                  No open ports detected. Target may be offline or firewalled.
+                </div>
+              )}
             </div>
           </div>
         </Card>
