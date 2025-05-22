@@ -17,6 +17,11 @@ import XssDetectorPage from "@/pages/tool-detail/xss-detector";
 import DirectoryScannerPage from "@/pages/tool-detail/directory-scanner";
 import SslScannerPage from "@/pages/tool-detail/ssl-scanner";
 import CsrfTesterPage from "@/pages/tool-detail/csrf-tester";
+import PingSweepPage from "@/pages/tool-detail/ping-sweep";
+import TraceroutePage from "@/pages/tool-detail/traceroute";
+import DnsLookupPage from "@/pages/tool-detail/dns-lookup";
+import SubnetCalculatorPage from "@/pages/tool-detail/subnet-calculator";
+import PacketAnalyzerPage from "@/pages/tool-detail/packet-analyzer";
 import ScanHistory from "@/pages/scan-history";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
@@ -40,6 +45,11 @@ function Router() {
           <Route path="/tools/directory-scanner" component={DirectoryScannerPage} />
           <Route path="/tools/ssl-scanner" component={SslScannerPage} />
           <Route path="/tools/csrf-tester" component={CsrfTesterPage} />
+          <Route path="/tools/ping-sweep" component={PingSweepPage} />
+          <Route path="/tools/traceroute" component={TraceroutePage} />
+          <Route path="/tools/dns-lookup" component={DnsLookupPage} />
+          <Route path="/tools/subnet-calculator" component={SubnetCalculatorPage} />
+          <Route path="/tools/packet-analyzer" component={PacketAnalyzerPage} />
           <Route path="/scan-history" component={ScanHistory} />
           <Route component={NotFound} />
         </Switch>
