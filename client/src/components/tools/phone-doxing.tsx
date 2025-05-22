@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { 
   Table, 
   TableBody, 
@@ -33,7 +35,18 @@ import {
   Search,
   RefreshCw,
   Database,
-  Shield
+  Shield,
+  ExternalLink,
+  Link,
+  Facebook,
+  Twitter,
+  Instagram,
+  Linkedin,
+  Youtube,
+  Hash,
+  Eye,
+  Newspaper,
+  Image
 } from "lucide-react";
 
 // Types
@@ -65,6 +78,33 @@ interface PhoneResult {
     recordType: string;
     link?: string;
   }>;
+  webResults?: Array<{
+    title: string;
+    url: string;
+    snippet: string;
+    source: string; // google, bing, etc.
+    type: 'web' | 'social' | 'image' | 'news' | 'forum'; // type of result
+    timestamp?: string; // when the content was published/found
+  }>;
+  imageResults?: Array<{
+    title: string;
+    url: string;
+    thumbnailUrl: string;
+    source: string;
+  }>;
+  socialMediaMentions?: Array<{
+    platform: string;
+    url: string;
+    username?: string;
+    content?: string;
+    date?: string;
+  }>;
+  leakedDatabases?: Array<{
+    databaseName: string;
+    leakDate: string;
+    dataTypes: string[];
+    confirmed: boolean;
+  }>;
 }
 
 interface ApiResponse {
@@ -85,6 +125,10 @@ export default function PhoneDoxing() {
   const [selectedDatabases, setSelectedDatabases] = useState<string[]>([
     "carrier", "location", "social", "public"
   ]);
+  const [selectedSearchEngines, setSelectedSearchEngines] = useState<string[]>([
+    "google", "bing", "socialMedia", "forums"
+  ]);
+  const [webSearchDepth, setWebSearchDepth] = useState<"basic" | "deep" | "comprehensive">("basic");
   
   // Handle database selection
   const handleDatabaseChange = (database: string, checked: boolean) => {
@@ -93,6 +137,20 @@ export default function PhoneDoxing() {
     } else {
       setSelectedDatabases(prev => prev.filter(db => db !== database));
     }
+  };
+  
+  // Handle search engine selection
+  const handleSearchEngineChange = (engine: string, checked: boolean) => {
+    if (checked) {
+      setSelectedSearchEngines(prev => [...prev, engine]);
+    } else {
+      setSelectedSearchEngines(prev => prev.filter(e => e !== engine));
+    }
+  };
+  
+  // Handle search depth change
+  const handleSearchDepthChange = (depth: "basic" | "deep" | "comprehensive") => {
+    setWebSearchDepth(depth);
   };
   
   // Function to search for phone number information
@@ -161,6 +219,42 @@ export default function PhoneDoxing() {
       if (selectedDatabases.includes("public")) {
         await new Promise(resolve => setTimeout(resolve, 900));
         addInfoLine("Searching public records databases...");
+      }
+      
+      // Process web search options
+      if (selectedSearchEngines.length > 0) {
+        addInfoLine("Initializing web search across multiple search engines...");
+        
+        if (selectedSearchEngines.includes("google")) {
+          await new Promise(resolve => setTimeout(resolve, 700));
+          addInfoLine("Querying Google for phone number references...");
+        }
+        
+        if (selectedSearchEngines.includes("bing")) {
+          await new Promise(resolve => setTimeout(resolve, 600));
+          addInfoLine("Searching Bing for relevant information...");
+        }
+        
+        if (selectedSearchEngines.includes("socialMedia")) {
+          await new Promise(resolve => setTimeout(resolve, 1200));
+          addInfoLine("Scanning social media platforms for mentions of the number...");
+        }
+        
+        if (selectedSearchEngines.includes("forums")) {
+          await new Promise(resolve => setTimeout(resolve, 800));
+          addInfoLine("Searching forums and discussion boards...");
+        }
+        
+        // Additional time for comprehensive search
+        if (webSearchDepth === "deep" || webSearchDepth === "comprehensive") {
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          addInfoLine("Performing deep web search with expanded parameters...");
+        }
+        
+        if (webSearchDepth === "comprehensive") {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          addInfoLine("Executing comprehensive search across dark web and leaked databases...");
+        }
       }
       
       // Generate a simulated result based on phone number patterns and selected databases
@@ -312,6 +406,154 @@ export default function PhoneDoxing() {
       
       if (recentActivity.length > 0) {
         result.recentActivity = recentActivity;
+      }
+    }
+    
+    // Add web search results if search engines are selected
+    if (selectedSearchEngines.includes("google") || selectedSearchEngines.includes("bing")) {
+      const webResults = [];
+      const ownerName = result.owner?.name || "unknown";
+      const formattedPhone = formatPhoneNumber(normalizedPhone, countryCode);
+      
+      // Common domains for search results
+      const domains = [
+        "linkedin.com", "facebook.com", "twitter.com", "instagram.com",
+        "yelp.com", "yellowpages.com", "whitepages.com", "truecaller.com",
+        "indeed.com", "glassdoor.com", "amazon.com", "ebay.com",
+        "craigslist.org", "reddit.com", "quora.com", "medium.com"
+      ];
+      
+      // Search result templates
+      const resultTemplates = [
+        {
+          title: `Contact ${ownerName} - Professional Profile`,
+          snippet: `... contact information: ${formattedPhone}. Email: ${ownerName.toLowerCase().replace(" ", ".")}@example.com ...`,
+          type: "web"
+        },
+        {
+          title: `${result.location} Business Directory`,
+          snippet: `... local businesses including ${ownerName}'s service. Contact: ${formattedPhone} ...`,
+          type: "web"
+        },
+        {
+          title: `Phone Number Information: ${formattedPhone}`,
+          snippet: `This phone number belongs to ${ownerName} from ${result.location}. Carrier: ${result.carrier} ...`,
+          type: "web"
+        }
+      ];
+      
+      // Generate 2-5 web results depending on search depth
+      const resultCount = webSearchDepth === "basic" ? 2 : webSearchDepth === "deep" ? 4 : 5;
+      
+      for (let i = 0; i < resultCount; i++) {
+        const template = resultTemplates[Math.floor(Math.random() * resultTemplates.length)];
+        const domain = domains[Math.floor(Math.random() * domains.length)];
+        const source = i % 2 === 0 ? "google" : "bing";
+        
+        // Generate random date within last year
+        const date = new Date();
+        date.setDate(date.getDate() - Math.floor(Math.random() * 365));
+        
+        webResults.push({
+          title: template.title,
+          url: `https://${domain}/profile/${Math.floor(Math.random() * 100000)}`,
+          snippet: template.snippet,
+          source: source,
+          type: template.type as 'web' | 'social' | 'image' | 'news' | 'forum',
+          timestamp: date.toISOString().split('T')[0]
+        });
+      }
+      
+      if (webResults.length > 0) {
+        result.webResults = webResults;
+      }
+    }
+    
+    // Add social media mentions if selected
+    if (selectedSearchEngines.includes("socialMedia")) {
+      const socialMediaMentions = [];
+      const platforms = ["Twitter", "Facebook", "Instagram", "LinkedIn", "Reddit"];
+      const ownerName = result.owner?.name || "J. Smith";
+      
+      // Generate 1-3 social media mentions
+      const mentionCount = Math.floor(Math.random() * 3) + 1;
+      
+      for (let i = 0; i < mentionCount; i++) {
+        const platform = platforms[Math.floor(Math.random() * platforms.length)];
+        const date = new Date();
+        date.setDate(date.getDate() - Math.floor(Math.random() * 180)); // Last 6 months
+        
+        socialMediaMentions.push({
+          platform: platform,
+          url: `https://${platform.toLowerCase()}.com/post/${Math.floor(Math.random() * 1000000)}`,
+          username: `${platform}User${Math.floor(Math.random() * 1000)}`,
+          content: Math.random() > 0.5 ? `Contact ${ownerName} at ${formatPhoneNumber(normalizedPhone, countryCode)} for more information.` : undefined,
+          date: date.toISOString().split('T')[0]
+        });
+      }
+      
+      if (socialMediaMentions.length > 0) {
+        result.socialMediaMentions = socialMediaMentions;
+      }
+    }
+    
+    // Add image results for comprehensive search
+    if (webSearchDepth === "comprehensive") {
+      const imageResults = [];
+      
+      // Generate 1-2 image results
+      const imageCount = Math.floor(Math.random() * 2) + 1;
+      
+      for (let i = 0; i < imageCount; i++) {
+        imageResults.push({
+          title: `${result.owner?.name || "Profile"} Photo`,
+          url: `https://example.com/images/${Math.floor(Math.random() * 10000)}`,
+          thumbnailUrl: `https://via.placeholder.com/150?text=Profile`,
+          source: i % 2 === 0 ? "google images" : "bing images"
+        });
+      }
+      
+      if (imageResults.length > 0) {
+        result.imageResults = imageResults;
+      }
+    }
+    
+    // Add leaked database information for comprehensive search
+    if (webSearchDepth === "comprehensive") {
+      const leakedDatabases = [];
+      const databaseNames = [
+        "SocialConnect 2021 Breach", 
+        "EcommerceShop Data Leak", 
+        "ForumSite User Database", 
+        "MobileApp User Records"
+      ];
+      
+      // Generate 1-2 leaked database entries
+      const dbCount = Math.floor(Math.random() * 2) + 1;
+      
+      for (let i = 0; i < dbCount; i++) {
+        const dataTypes = [];
+        if (Math.random() > 0.5) dataTypes.push("email");
+        if (Math.random() > 0.5) dataTypes.push("phone");
+        if (Math.random() > 0.5) dataTypes.push("username");
+        if (Math.random() > 0.7) dataTypes.push("password");
+        if (dataTypes.length === 0) dataTypes.push("phone"); // Ensure at least one data type
+        
+        // Generate date in past 1-3 years
+        const year = 2021 - Math.floor(Math.random() * 3);
+        const month = Math.floor(Math.random() * 12) + 1;
+        const day = Math.floor(Math.random() * 28) + 1;
+        
+        leakedDatabases.push({
+          databaseName: databaseNames[Math.floor(Math.random() * databaseNames.length)],
+          leakDate: `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`,
+          dataTypes: dataTypes,
+          confirmed: Math.random() > 0.3 // 70% chance of being confirmed
+        });
+      }
+      
+      if (leakedDatabases.length > 0) {
+        result.leakedDatabases = leakedDatabases;
       }
     }
     
