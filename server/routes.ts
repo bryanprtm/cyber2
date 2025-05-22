@@ -5,6 +5,7 @@ import { setupWebSocketServer } from "./tools/wsServer";
 import { handlePortScan, handlePingSweep, getScanHistory } from "./controllers/scanController";
 import { handleHeaderAnalysis } from "./controllers/headerAnalyzerController";
 import { handleEmailHunting } from "./controllers/emailHunterController";
+import { handleShellUploaderAnalysis } from "./controllers/shellUploaderController";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API Routes - all prefixed with /api
@@ -89,6 +90,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Email Hunter API 
   app.post("/api/scan/email-hunter", handleEmailHunting);
+  
+  // Shell Uploader API
+  app.post("/api/scan/shell-uploader", handleShellUploaderAnalysis);
   
   // Note: WHOIS Lookup API is now handled by the controller at line 82
   
