@@ -89,15 +89,28 @@ export async function scanUrl(options: UrlScannerOptions): Promise<UrlScanResult
   // Simulating actual scan since we don't have access to real URL scanning services
   // In a real implementation, this would use proper security APIs and services
   try {
-    // Make HTTP request to the URL
-    const response = await axios.get(normalizedUrl, {
-      timeout,
-      maxRedirects: 5,
-      validateStatus: () => true, // Allow any status code
-      headers: {
-        'User-Agent': userAgent
-      }
-    });
+    // Make HTTP request to the URL with error handling
+    let response;
+    try {
+      response = await axios.get(normalizedUrl, {
+        timeout,
+        maxRedirects: 5,
+        validateStatus: () => true, // Allow any status code
+        headers: {
+          'User-Agent': userAgent
+        }
+      });
+    } catch (err) {
+      // If failed to get the URL, create simulated response
+      console.log(`Error fetching URL: ${normalizedUrl}`, err.message);
+      response = {
+        status: err.response?.status || 0,
+        statusText: err.message || 'Failed to fetch URL',
+        headers: {},
+        data: '',
+        request: { _redirectable: { _redirects: [] } }
+      };
+    }
     
     // Extract base information
     const protocol = new URL(normalizedUrl).protocol;
@@ -196,49 +209,76 @@ export async function scanUrl(options: UrlScannerOptions): Promise<UrlScanResult
     
     // Check for phishing indicators if requested
     if (checkPhishing) {
-      const phishingResult = simulatePhishingCheck(response.data, normalizedUrl);
-      result.phishingDetection = phishingResult;
-      
-      if (phishingResult.isPhishing) {
-        securityIssues.push('Phishing indicators detected');
-        securityScore -= 60;
-        result.riskFactors.push({
-          type: 'Potential Phishing',
-          severity: 'Critical',
-          description: `Site contains indicators of phishing targeting ${phishingResult.targetBrand || 'users'}`
-        });
+      try {
+        const phishingResult = simulatePhishingCheck(response.data, normalizedUrl);
+        result.phishingDetection = phishingResult;
+        
+        if (phishingResult && phishingResult.isPhishing) {
+          securityIssues.push('Phishing indicators detected');
+          securityScore -= 60;
+          result.riskFactors.push({
+            type: 'Potential Phishing',
+            severity: 'Critical',
+            description: `Site contains indicators of phishing targeting ${phishingResult.targetBrand || 'users'}`
+          });
+        }
+      } catch (error) {
+        console.error("Error in phishing check:", error);
+        result.phishingDetection = {
+          isPhishing: false,
+          confidence: 0,
+          indicators: ["Error performing phishing check"]
+        };
       }
     }
     
     // Check for malware indicators if requested
     if (checkMalware) {
-      const malwareResult = simulateMalwareCheck(response.data);
-      result.malwareDetection = malwareResult;
-      
-      if (malwareResult.hasMalware) {
-        securityIssues.push('Malware indicators detected');
-        securityScore -= 80;
-        result.riskFactors.push({
-          type: 'Potential Malware',
-          severity: 'Critical',
-          description: 'Site contains patterns associated with malware distribution'
-        });
+      try {
+        const malwareResult = simulateMalwareCheck(response.data);
+        result.malwareDetection = malwareResult;
+        
+        if (malwareResult && malwareResult.hasMalware) {
+          securityIssues.push('Malware indicators detected');
+          securityScore -= 80;
+          result.riskFactors.push({
+            type: 'Potential Malware',
+            severity: 'Critical',
+            description: 'Site contains patterns associated with malware distribution'
+          });
+        }
+      } catch (error) {
+        console.error("Error in malware check:", error);
+        result.malwareDetection = {
+          hasMalware: false,
+          confidence: 0,
+          detectionType: ["Error performing malware check"]
+        };
       }
     }
     
     // Check reputation if requested
     if (checkReputation) {
-      const reputationResult = simulateReputationCheck(normalizedUrl);
-      result.reputationInfo = reputationResult;
-      
-      if (reputationResult.score < 40) {
-        securityIssues.push('Poor site reputation');
-        securityScore -= 30;
-        result.riskFactors.push({
-          type: 'Poor Reputation',
-          severity: 'High',
-          description: 'Site has a concerning reputation score based on historical data'
-        });
+      try {
+        const reputationResult = simulateReputationCheck(normalizedUrl);
+        result.reputationInfo = reputationResult;
+        
+        if (reputationResult && reputationResult.score < 40) {
+          securityIssues.push('Poor site reputation');
+          securityScore -= 30;
+          result.riskFactors.push({
+            type: 'Poor Reputation',
+            severity: 'High',
+            description: 'Site has a concerning reputation score based on historical data'
+          });
+        }
+      } catch (error) {
+        console.error("Error in reputation check:", error);
+        result.reputationInfo = {
+          score: 50,
+          categories: ["Unknown"],
+          source: "Error checking reputation"
+        };
       }
     }
     
