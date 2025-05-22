@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Globe, Search, Shield, Server, Loader2, Calendar, User, Building, Mail } from 'lucide-react';
 import { i18n } from '@/lib/i18n';
-import { LanguageSelector } from '@/components/ui/language-selector';
+import { LanguageSelectorSimple } from '@/components/ui/language-selector-simple';
 
 // Define the WHOIS result type
 interface WhoisResult {
@@ -157,7 +157,7 @@ const WhoisLookupPage: React.FC = () => {
       
       <div className="mb-8 text-center">
         <div className="flex justify-center mb-2">
-          <LanguageSelector />
+          <LanguageSelectorSimple />
         </div>
         <div className="inline-flex items-center justify-center p-2 bg-primary/10 rounded-full mb-4">
           <Globe className="h-8 w-8 text-primary" />
@@ -358,18 +358,13 @@ const WhoisLookupPage: React.FC = () => {
       </Card>
       
       <div className="mt-8 max-w-4xl mx-auto space-y-4 text-sm">
-        <h3 className="text-primary font-tech font-medium">About WHOIS Lookup</h3>
+        <h3 className="text-primary font-tech font-medium">{i18n.t('whois.about.title')}</h3>
         <p className="text-muted-foreground">
-          WHOIS (pronounced as "who is") is a query and response protocol that is widely used for querying 
-          databases that store the registered users or assignees of an Internet resource, such as a domain name, 
-          an IP address block, or an autonomous system. This tool helps you find information about domain names, 
-          including the registrar, registration date, and contact information.
+          {i18n.t('whois.about.description')}
         </p>
         
         <p className="text-muted-foreground">
-          Please note that some domain registrars may implement privacy protection services that hide the 
-          actual owner's details from public WHOIS queries. In such cases, you might see the registrar's 
-          information or a privacy service instead of the actual owner's details.
+          {i18n.t('whois.privacy.description')}
         </p>
       </div>
     </div>
