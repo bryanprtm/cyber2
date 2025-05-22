@@ -1,10 +1,9 @@
 import axios from 'axios';
-import whois from 'whois';
-import { parsers } from 'whoisjs';
+import { exec } from 'child_process';
 import { promisify } from 'util';
 
-// Convert callback-based whois.lookup to Promise-based
-const lookupPromise = promisify(whois.lookup);
+// Convert exec to Promise-based
+const execPromise = promisify(exec);
 
 export interface WhoisOptions {
   domain: string;
@@ -45,7 +44,7 @@ export interface WhoisResult {
  * @returns WhoisResult with formatted domain information
  */
 export async function lookupDomain(options: WhoisOptions): Promise<WhoisResult> {
-  const { domain, followIcannReferral = true, timeout = 10000 } = options;
+  const { domain, timeout = 10000 } = options;
   
   if (!domain) {
     throw new Error('Domain is required');
@@ -55,24 +54,21 @@ export async function lookupDomain(options: WhoisOptions): Promise<WhoisResult> 
   const normalizedDomain = normalizeDomain(domain);
   
   try {
-    // Perform the WHOIS lookup
-    const lookupOptions = {
-      follow: followIcannReferral ? 3 : 0, // Follow referral servers up to 3 times if enabled
-      timeout: timeout / 1000, // Convert to seconds
-    };
+    // Execute the whois command
+    const { stdout } = await execPromise(`whois ${normalizedDomain}`, {
+      timeout: timeout
+    });
     
-    const rawData = await lookupPromise(normalizedDomain, lookupOptions);
-    
-    if (!rawData) {
+    if (!stdout) {
       throw new Error('No WHOIS data returned');
     }
     
-    // Parse the raw WHOIS data
-    const parsedData = parseWhoisData(normalizedDomain, rawData);
+    // Parse the raw data into structured format
+    const result = parseWhoisData(stdout, normalizedDomain);
     
     return {
-      ...parsedData,
-      raw: rawData
+      ...result,
+      raw: stdout
     };
   } catch (error) {
     console.error('WHOIS lookup error:', error);
@@ -104,114 +100,12 @@ function normalizeDomain(domain: string): string {
 /**
  * Parse raw WHOIS data into a structured format
  */
-function parseWhoisData(domain: string, rawData: string): Partial<WhoisResult> {
-  try {
-    // Attempt to use the whoisjs parser for structured data
-    const parser = parsers.getParser(domain);
-    
-    if (parser) {
-      const parsedData = parser.parse(rawData);
-      
-      // Map the parsed data to our WhoisResult structure
-      return {
-        domainName: findValue(parsedData, ['domainName', 'domain', 'domain_name']),
-        registrar: findValue(parsedData, ['registrar', 'registrar_name']),
-        registrarWhoisServer: findValue(parsedData, ['registrarWhoisServer', 'whois_server']),
-        registrarUrl: findValue(parsedData, ['registrarUrl', 'registrar_url']),
-        updatedDate: findValue(parsedData, ['updatedDate', 'updated_date']),
-        creationDate: findValue(parsedData, ['creationDate', 'creation_date', 'created_date']),
-        registryExpiryDate: findValue(parsedData, ['registryExpiryDate', 'expiration_date', 'expires']),
-        registrant: {
-          organization: findValue(parsedData, ['registrantOrganization', 'registrant_organization']),
-          name: findValue(parsedData, ['registrantName', 'registrant_name']),
-          email: findValue(parsedData, ['registrantEmail', 'registrant_email']),
-          country: findValue(parsedData, ['registrantCountry', 'registrant_country']),
-        },
-        admin: {
-          name: findValue(parsedData, ['adminName', 'admin_name']),
-          email: findValue(parsedData, ['adminEmail', 'admin_email']),
-        },
-        tech: {
-          name: findValue(parsedData, ['techName', 'tech_name']),
-          email: findValue(parsedData, ['techEmail', 'tech_email']),
-        },
-        nameServers: extractNameServers(parsedData, rawData),
-        status: extractDomainStatus(parsedData, rawData),
-      };
-    }
-    
-    // Fall back to regex-based extraction if parser fails
-    return extractWithRegex(rawData);
-  } catch (error) {
-    console.error('Error parsing WHOIS data:', error);
-    return fallbackExtraction(rawData);
-  }
-}
-
-/**
- * Find a value in the parsed data using multiple possible keys
- */
-function findValue(data: any, keys: string[]): string | undefined {
-  if (!data) return undefined;
-  
-  for (const key of keys) {
-    if (data[key]) {
-      return data[key];
-    }
-  }
-  
-  return undefined;
-}
-
-/**
- * Extract name servers from parsed data or raw data
- */
-function extractNameServers(parsedData: any, rawData: string): string[] {
-  // Try to get from parsed data first
-  if (parsedData && parsedData.nameServers && Array.isArray(parsedData.nameServers)) {
-    return parsedData.nameServers;
-  }
-  
-  if (parsedData && parsedData.name_servers && Array.isArray(parsedData.name_servers)) {
-    return parsedData.name_servers;
-  }
-  
-  // Fall back to regex extraction
-  const nsRegex = /(?:name server|nameserver|nserver)s?:?\s+([^\s]+)/gi;
-  const matches = [...rawData.matchAll(nsRegex)];
-  const nameServers = matches.map(match => match[1].toLowerCase()).filter(Boolean);
-  
-  // Remove duplicates
-  return [...new Set(nameServers)];
-}
-
-/**
- * Extract domain status from parsed data or raw data
- */
-function extractDomainStatus(parsedData: any, rawData: string): string[] {
-  // Try to get from parsed data first
-  if (parsedData && parsedData.status && Array.isArray(parsedData.status)) {
-    return parsedData.status;
-  }
-  
-  if (parsedData && parsedData.domain_status && Array.isArray(parsedData.domain_status)) {
-    return parsedData.domain_status;
-  }
-  
-  // Fall back to regex extraction
-  const statusRegex = /(?:domain )?status:?\s+([^\r\n]+)/gi;
-  const matches = [...rawData.matchAll(statusRegex)];
-  const statuses = matches.map(match => match[1].trim()).filter(Boolean);
-  
-  // Remove duplicates
-  return [...new Set(statuses)];
-}
-
-/**
- * Extract WHOIS data using regex patterns when parser fails
- */
-function extractWithRegex(rawData: string): Partial<WhoisResult> {
-  const result: Partial<WhoisResult> = {};
+function parseWhoisData(rawData: string, domain: string): Partial<WhoisResult> {
+  const result: Partial<WhoisResult> = {
+    domainName: domain,
+    nameServers: [],
+    status: []
+  };
   
   // Domain name
   const domainMatch = rawData.match(/(?:domain name|domain):\s*([^\r\n]+)/i);
@@ -273,21 +167,27 @@ function extractWithRegex(rawData: string): Partial<WhoisResult> {
   if (techEmailMatch) result.tech.email = techEmailMatch[1].trim();
   
   // Name servers
-  result.nameServers = extractNameServers({}, rawData);
+  const nsRegex = /(?:name server|nameserver|nserver)s?:?\s+([^\s\r\n]+)/gi;
+  let match;
+  const nameServers = [];
+  
+  while ((match = nsRegex.exec(rawData)) !== null) {
+    nameServers.push(match[1].toLowerCase());
+  }
+  
+  // Remove duplicates
+  result.nameServers = [...new Set(nameServers)];
   
   // Status
-  result.status = extractDomainStatus({}, rawData);
+  const statusRegex = /(?:domain )?status:?\s+([^\r\n]+)/gi;
+  const statuses = [];
+  
+  while ((match = statusRegex.exec(rawData)) !== null) {
+    statuses.push(match[1].trim());
+  }
+  
+  // Remove duplicates
+  result.status = [...new Set(statuses)];
   
   return result;
-}
-
-/**
- * Last resort extraction method for when all else fails
- */
-function fallbackExtraction(rawData: string): Partial<WhoisResult> {
-  return {
-    // At minimum, we parse the name servers and status
-    nameServers: extractNameServers({}, rawData),
-    status: extractDomainStatus({}, rawData),
-  };
 }
