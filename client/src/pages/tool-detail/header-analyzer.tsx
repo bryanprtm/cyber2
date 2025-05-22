@@ -359,8 +359,8 @@ export default function HeaderAnalyzerPage() {
                   </div>
                   <Progress 
                     value={results.securityScore} 
-                    className="h-2"
-                    indicatorClassName={cn(
+                    className={cn(
+                      "h-2",
                       results.securityScore >= 80 ? "bg-green-500" : 
                       results.securityScore >= 50 ? "bg-yellow-500" : 
                       "bg-red-500"
