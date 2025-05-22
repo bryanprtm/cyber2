@@ -134,9 +134,9 @@ export function setupWebSocketServer(server: HttpServer) {
               totalHosts: totalHosts
             });
             
-            // Setup progress handler
+            // Setup various event handlers for better progress reporting
             scanner.on('progress', (progress: PingSweepProgress) => {
-              // Send progress updates
+              // Send individual host progress updates
               sendMessage(ws, 'sweep_progress', {
                 host: progress.host,
                 status: progress.status,
@@ -144,6 +144,30 @@ export function setupWebSocketServer(server: HttpServer) {
                 hostname: progress.hostname,
                 completed: progress.completed,
                 total: progress.total,
+                timestamp: new Date().toISOString()
+              });
+            });
+            
+            // Handle batch progress updates
+            scanner.on('batch_progress', (progress: any) => {
+              sendMessage(ws, 'sweep_batch_progress', {
+                ...progress,
+                timestamp: new Date().toISOString()
+              });
+            });
+            
+            // Handle batch completion
+            scanner.on('batch_complete', (info: any) => {
+              sendMessage(ws, 'sweep_batch_complete', {
+                ...info,
+                timestamp: new Date().toISOString()
+              });
+            });
+            
+            // Handle informational messages
+            scanner.on('info', (info: any) => {
+              sendMessage(ws, 'sweep_info', {
+                ...info,
                 timestamp: new Date().toISOString()
               });
             });

@@ -176,7 +176,7 @@ export default function PingSweep({ onScanComplete }: PingSweepProps) {
         break;
         
       case 'sweep_progress':
-        // Update scan progress
+        // Update scan progress for individual hosts
         const progressData = lastMessage.data;
         const { completed, total, host, status, responseTime } = progressData;
         
@@ -191,15 +191,17 @@ export default function PingSweep({ onScanComplete }: PingSweepProps) {
           hostsTotal: total
         }));
         
-        // Add to activity log
-        if (status === 'alive' || (completed % Math.max(Math.floor(total / 20), 1) === 0)) {
+        // Add to activity log for alive hosts only (to avoid log clutter)
+        if (status === 'alive') {
+          const message = responseTime 
+            ? `Host ${host} is alive (${responseTime}ms)${progressData.hostname ? ` - ${progressData.hostname}` : ''}` 
+            : `Host ${host} is alive`;
+          
           setActivityLog(prev => {
             const newLog = {
-              message: status === 'alive' 
-                ? `Host ${host} is alive (${responseTime}ms)` 
-                : `Scanned ${completed}/${total} hosts (${progressPercent}%)`,
-              timestamp: new Date(),
-              type: status === 'alive' ? 'success' : 'progress' as any
+              message,
+              timestamp: new Date(progressData.timestamp || Date.now()),
+              type: 'success' as any
             };
             
             // Keep log manageable (latest 100 entries)
@@ -208,14 +210,98 @@ export default function PingSweep({ onScanComplete }: PingSweepProps) {
           });
           
           // Log alive hosts to terminal
-          if (status === 'alive') {
-            addLine(`Host ${host} is alive (${responseTime}ms)`, "success");
-          }
+          addLine(message, "success");
+        }
+        
+        break;
+        
+      case 'sweep_batch_progress':
+        // Update overall scan progress from batch updates
+        const batchData = lastMessage.data;
+        const batchCompleted = batchData.completed;
+        const batchTotal = batchData.total;
+        
+        // Calculate percentage progress
+        const batchProgress = Math.floor((batchCompleted / batchTotal) * 100);
+        setScanProgress(batchProgress);
+        
+        // Calculate elapsed time, rate, and ETA
+        const now = Date.now();
+        const elapsedMs = now - scanStats.startTime;
+        const elapsedSeconds = elapsedMs / 1000;
+        const rate = elapsedSeconds > 0 ? Math.round((batchCompleted / elapsedSeconds) * 10) / 10 : 0;
+        const remainingHosts = batchTotal - batchCompleted;
+        const etaSeconds = rate > 0 ? remainingHosts / rate : 0;
+        
+        // Format times for display
+        const elapsedTime = formatTime(elapsedSeconds);
+        const eta = formatTime(etaSeconds);
+        
+        setScanStats(prev => ({
+          ...prev,
+          hostsScanned: batchCompleted,
+          hostsTotal: batchTotal,
+          elapsedTime,
+          estimatedTimeRemaining: eta,
+          rate
+        }));
+        
+        // Occasionally update scan progress in terminal and log
+        if (batchCompleted % Math.max(Math.floor(batchTotal / 10), 1) === 0) {
+          const progressMessage = `Scan progress: ${batchProgress}% (${batchCompleted}/${batchTotal} hosts)`;
+          addInfoLine(progressMessage);
           
-          // Occasionally update scan progress in terminal
-          if (completed % Math.max(Math.floor(total / 5), 1) === 0) {
-            addInfoLine(`Scan progress: ${progressPercent}% (${completed}/${total} hosts)`);
-          }
+          setActivityLog(prev => {
+            const newLog = {
+              message: progressMessage,
+              timestamp: new Date(batchData.timestamp || Date.now()),
+              type: 'progress' as any
+            };
+            
+            // Keep log manageable
+            const updatedLog = [newLog, ...prev].slice(0, 100);
+            return updatedLog;
+          });
+        }
+        break;
+        
+      case 'sweep_info':
+        // Display informational messages
+        const infoData = lastMessage.data;
+        setActivityLog(prev => {
+          const newLog = {
+            message: infoData.message,
+            timestamp: new Date(infoData.timestamp || Date.now()),
+            type: 'info' as any
+          };
+          
+          // Keep log manageable
+          const updatedLog = [newLog, ...prev].slice(0, 100);
+          return updatedLog;
+        });
+        break;
+        
+      case 'sweep_batch_complete':
+        // Handle batch completion events
+        const batchCompleteData = lastMessage.data;
+        const batchIndex = batchCompleteData.batchIndex;
+        const totalBatches = batchCompleteData.totalBatches;
+        
+        // Log batch completion
+        if (batchIndex !== undefined && totalBatches !== undefined) {
+          const batchMessage = `Completed batch ${batchIndex + 1} of ${totalBatches}`;
+          
+          setActivityLog(prev => {
+            const newLog = {
+              message: batchMessage,
+              timestamp: new Date(batchCompleteData.timestamp || Date.now()),
+              type: 'info' as any
+            };
+            
+            // Keep log manageable
+            const updatedLog = [newLog, ...prev].slice(0, 100);
+            return updatedLog;
+          });
         }
         break;
         

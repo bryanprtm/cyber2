@@ -3,6 +3,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { hostname } from 'os';
 import dns from 'dns';
+// @ts-ignore: Import the ping module with type definitions from our custom declaration file
 import ping from 'ping';
 
 const execPromise = promisify(exec);
@@ -56,7 +57,7 @@ export class PingSweepScanner extends EventEmitter {
   }
   
   /**
-   * Start the ping sweep process
+   * Start the ping sweep process with improved progress reporting
    */
   async start(): Promise<PingSweepResult[]> {
     try {
@@ -72,26 +73,86 @@ export class PingSweepScanner extends EventEmitter {
         return [];
       }
       
-      // Process IPs in batches with limited concurrency
-      const ipBatches: string[][] = [];
-      for (let i = 0; i < this.ipList.length; i += this.parallel) {
-        ipBatches.push(this.ipList.slice(i, i + this.parallel));
-      }
+      // Emit initial progress event to set up UI
+      this.emit('progress', {
+        host: this.target,
+        status: 'pending',
+        completed: 0,
+        total: this.total,
+        timestamp: new Date()
+      });
       
-      // Process each batch
-      for (const batch of ipBatches) {
-        if (this.isStopped) break;
+      // Throttle progress updates to avoid overwhelming the UI
+      let lastProgressUpdate = Date.now();
+      let pendingUpdates = 0;
+      
+      // Improved batching with better progress reporting
+      const processBatch = async (ips: string[]) => {
+        // Announce batch start
+        this.emit('info', {
+          message: `Processing batch of ${ips.length} hosts...`,
+          timestamp: new Date()
+        });
         
-        // Process the batch in parallel
-        const batchResults = await Promise.all(
-          batch.map(ip => this.pingHost(ip))
+        // Process batch in parallel with controlled concurrency
+        const batchResults = await Promise.allSettled(
+          ips.map(ip => this.pingHost(ip).then(result => {
+            // Throttle UI updates for better performance
+            pendingUpdates++;
+            const now = Date.now();
+            if (now - lastProgressUpdate > 300 || pendingUpdates > 5) {
+              lastProgressUpdate = now;
+              pendingUpdates = 0;
+              this.emit('batch_progress', {
+                completed: this.completed,
+                total: this.total,
+                pendingHosts: this.total - this.completed,
+                timestamp: new Date()
+              });
+            }
+            return result;
+          }))
         );
         
-        // Add results
-        this.results.push(...batchResults);
+        // Process results from Promise.allSettled and filter for successful ones only
+        const successfulResults = batchResults
+          .filter((r): r is PromiseFulfilledResult<PingSweepResult> => r.status === 'fulfilled')
+          .map(r => r.value);
+        
+        return successfulResults;
+      };
+      
+      // Create batches for better concurrency control
+      const batches: string[][] = [];
+      for (let i = 0; i < this.ipList.length; i += this.parallel) {
+        batches.push(this.ipList.slice(i, i + this.parallel));
       }
       
-      // Sort by IP
+      // Process all batches sequentially
+      for (let i = 0; i < batches.length; i++) {
+        if (this.isStopped) break;
+        
+        // Announce batch number
+        this.emit('info', {
+          message: `Starting batch ${i + 1} of ${batches.length}...`,
+          timestamp: new Date()
+        });
+        
+        const batchResults = await processBatch(batches[i]);
+        this.results.push(...batchResults);
+        
+        // Force a progress update after each batch
+        this.emit('batch_complete', {
+          batchIndex: i,
+          totalBatches: batches.length,
+          completed: this.completed,
+          total: this.total,
+          pendingHosts: this.total - this.completed,
+          timestamp: new Date()
+        });
+      }
+      
+      // Sort results by IP for better display
       this.results.sort((a, b) => {
         const aOctets = a.ip.split('.').map(Number);
         const bOctets = b.ip.split('.').map(Number);
@@ -103,6 +164,14 @@ export class PingSweepScanner extends EventEmitter {
         }
         
         return 0;
+      });
+      
+      // Emit final completion event
+      this.emit('sweep_complete', {
+        totalHosts: this.total,
+        aliveHosts: this.results.filter(r => r.status === 'alive').length,
+        deadHosts: this.results.filter(r => r.status === 'dead').length,
+        timestamp: new Date()
       });
       
       return this.results;
