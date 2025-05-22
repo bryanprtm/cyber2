@@ -12,6 +12,7 @@ import { handleFileScanning } from "./controllers/fileScannerController";
 import { handleUrlScanning } from "./controllers/urlScannerController";
 import { handleCorsTesting } from "./controllers/corsTesterController";
 import { handleLfiScanning } from "./controllers/lfiScannerController";
+import { handleRfiScanning } from "./controllers/rfiScannerController";
 import { handleSqlInjectionTesting, getSqlInjectionPayloads } from "./controllers/sqlInjectorController";
 import { getAllTools, addTool, updateTool } from "./controllers/toolsController";
 import multer from "multer";
@@ -67,6 +68,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // LFI Scanner API
   app.post("/api/security/lfi-scanner", handleLfiScanning);
+  
+  // RFI Scanner API
+  app.post("/api/security/rfi-scanner", handleRfiScanning);
   
   // SQL Injector API
   app.post("/api/security/sql-injector", handleSqlInjectionTesting);
