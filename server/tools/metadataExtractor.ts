@@ -21,6 +21,18 @@ export interface ExifData {
   [key: string]: any;
 }
 
+export interface MetadataExifInfo {
+  make?: string;
+  model?: string;
+  software?: string;
+  dateTime?: string;
+  gps?: {
+    latitude?: number;
+    longitude?: number;
+    altitude?: number;
+  };
+}
+
 export interface MetadataResult {
   fileName: string;
   fileSize: number;
@@ -33,17 +45,7 @@ export interface MetadataResult {
   created?: Date;
   modified?: Date;
   metadata: ExifData;
-  exif?: {
-    make?: string;
-    model?: string;
-    software?: string;
-    dateTime?: string;
-    gps?: {
-      latitude?: number;
-      longitude?: number;
-      altitude?: number;
-    };
-  };
+  exif?: MetadataExifInfo;
   sanitized: boolean;
   categories: string[];
 }
@@ -84,35 +86,51 @@ export async function extractMetadata(options: MetadataExtractorOptions): Promis
     const sanitized = !options.extractLocation && containsLocationData(exifData);
     
     // Format EXIF data specifically for common file types
-    let exifSpecific = undefined;
+    let exifSpecific: MetadataExifInfo | undefined = undefined;
     
     // For images, extract camera and GPS info if available and requested
     if (['jpg', 'jpeg', 'png', 'tiff', 'heic'].includes(fileType.toLowerCase())) {
+      const dateTimeValue = exifData.DateTimeOriginal || exifData.CreateDate;
+      const dateTimeStr = typeof dateTimeValue === 'string' ? dateTimeValue : undefined;
+      
       exifSpecific = {
         make: exifData.Make,
         model: exifData.Model,
         software: exifData.Software,
-        dateTime: exifData.DateTimeOriginal || exifData.CreateDate
+        dateTime: dateTimeStr,
+        gps: undefined
       };
       
       // Include GPS data if requested and available
       if (options.extractLocation && hasGpsData(exifData)) {
+        const latitude = typeof exifData.GPSLatitude === 'number' ? exifData.GPSLatitude : undefined;
+        const longitude = typeof exifData.GPSLongitude === 'number' ? exifData.GPSLongitude : undefined;
+        const altitude = typeof exifData.GPSAltitude === 'number' ? exifData.GPSAltitude : undefined;
+        
         exifSpecific.gps = {
-          latitude: exifData.GPSLatitude,
-          longitude: exifData.GPSLongitude,
-          altitude: exifData.GPSAltitude
+          latitude,
+          longitude,
+          altitude
         };
       }
     }
     
     // Get dates
-    const createdDate = exifData.CreateDate || exifData.DateTimeOriginal 
-      ? new Date(exifData.CreateDate || exifData.DateTimeOriginal) 
-      : undefined;
+    let createdDate: Date | undefined = undefined;
+    if (exifData.CreateDate || exifData.DateTimeOriginal) {
+      const dateValue = exifData.CreateDate || exifData.DateTimeOriginal;
+      if (typeof dateValue === 'string') {
+        createdDate = new Date(dateValue);
+      }
+    }
       
-    const modifiedDate = exifData.ModifyDate 
-      ? new Date(exifData.ModifyDate) 
-      : undefined;
+    let modifiedDate: Date | undefined = undefined;
+    if (exifData.ModifyDate) {
+      const dateValue = exifData.ModifyDate;
+      if (typeof dateValue === 'string') {
+        modifiedDate = new Date(dateValue);
+      }
+    }
     
     // Create the result object
     const result: MetadataResult = {
