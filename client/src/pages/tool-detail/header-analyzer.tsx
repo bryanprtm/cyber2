@@ -78,7 +78,7 @@ export default function HeaderAnalyzerPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('security');
   const { toast } = useToast();
-  const { addCommandLine, addInfoLine, addErrorLine, addSuccessLine, clearTerminal } = useTerminal();
+  const { addCommandLine, addInfoLine, addErrorLine, addSuccessLine, clearLines } = useTerminal();
 
   // Validate URL format
   const isValidUrl = (url: string) => {
@@ -109,7 +109,7 @@ export default function HeaderAnalyzerPage() {
 
     setError(null);
     setIsAnalyzing(true);
-    clearTerminal();
+    clearLines();
     addCommandLine(`Analyzing headers for ${normalizedUrl}...`);
     addInfoLine(`HTTP Request: GET ${normalizedUrl}`);
     if (followRedirects) {
@@ -190,7 +190,7 @@ export default function HeaderAnalyzerPage() {
     setResults(null);
     setError(null);
     setActiveTab('security');
-    clearTerminal();
+    clearLines();
     addInfoLine('Header analyzer tool reset');
   };
 
@@ -219,7 +219,7 @@ export default function HeaderAnalyzerPage() {
         <meta name="description" content="Analyze HTTP headers for security issues and vulnerabilities" />
       </Helmet>
       
-      <MatrixBackground opacity={0.05} />
+      <MatrixBackground className="opacity-5" />
       
       <h1 className="text-3xl font-tech mb-6 text-primary tracking-wider flex items-center">
         <Server className="inline-block mr-2" />
@@ -296,7 +296,7 @@ export default function HeaderAnalyzerPage() {
             
             <div className="mt-8">
               <h3 className="text-lg font-semibold mb-2">{t('header.analyzer.terminal', 'Analysis Log')}</h3>
-              <Terminal maxHeight="200px" />
+              <Terminal lines={[]} maxHeight="200px" />
             </div>
           </Card>
         </div>
