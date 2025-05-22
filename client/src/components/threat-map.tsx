@@ -84,7 +84,7 @@ const generateAttacks = (): Attack[] => {
     timestamp.setMinutes(timestamp.getMinutes() - Math.floor(Math.random() * 60));
     
     attacks.push({
-      id: `attack-${i}`,
+      id: `attack-${i}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       source: {
         country: sources[sourceIndex].country,
         ip: sourceIp,
@@ -177,12 +177,16 @@ export default function ThreatMap() {
         return updated;
       });
       
+      // Create unique ID for new attack
+      const uniqueId = `${newAttack.id}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      newAttack.id = uniqueId;
+      
       // Add to active attacks for animation
-      setActiveAttacks(prev => [...prev, newAttack.id]);
+      setActiveAttacks(prev => [...prev, uniqueId]);
       
       // Remove from active attacks after animation completes
       setTimeout(() => {
-        setActiveAttacks(prev => prev.filter(id => id !== newAttack.id));
+        setActiveAttacks(prev => prev.filter(id => id !== uniqueId));
       }, 3000);
       
     }, 3000); // New attack every 3 seconds
