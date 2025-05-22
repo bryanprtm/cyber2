@@ -1,6 +1,7 @@
 import { Server as HttpServer } from 'http';
 import WebSocket, { WebSocketServer } from 'ws';
 import { PortScanner, portScan, PortScannerOptions, PortScanResult, PortScanProgress } from './portScanner';
+import { PingSweepScanner, pingSweep, PingSweepOptions, PingSweepResult, PingSweepProgress } from './pingSweep';
 
 interface Message {
   type: string;
