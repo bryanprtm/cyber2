@@ -23,7 +23,12 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
-import { useTranslation } from "@/hooks/use-translation";
+// Temporary translation hook until we have a real one
+const useTranslation = () => {
+  return {
+    t: (str: string) => str
+  };
+};
 
 const formSchema = z.object({
   password: z.string().min(1, "Password is required"),
@@ -38,7 +43,7 @@ export default function PasswordChecker({ onPasswordChecked }: PasswordCheckerPr
   const [isChecking, setIsChecking] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-  const { addCommandLine, addResultLine, addErrorLine, addSuccessLine } = useTerminal();
+  const { addCommandLine, addInfoLine, addErrorLine, addSuccessLine } = useTerminal();
   const { t } = useTranslation();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -72,12 +77,12 @@ export default function PasswordChecker({ onPasswordChecked }: PasswordCheckerPr
         const score = passwordResult.strength.score;
         
         addSuccessLine("Password analysis completed");
-        addResultLine(`Password strength: ${scoreLabels[score]} (${score}/4)`);
+        addInfoLine(`Password strength: ${scoreLabels[score]} (${score}/4)`);
         
         if (passwordResult.issues.length > 0) {
-          addResultLine("Issues found:");
+          addInfoLine("Issues found:");
           passwordResult.issues.forEach((issue: string) => {
-            addResultLine(`• ${issue}`);
+            addInfoLine(`• ${issue}`);
           });
         }
         
@@ -208,11 +213,12 @@ export default function PasswordChecker({ onPasswordChecked }: PasswordCheckerPr
             <div>
               <h3 className="text-lg font-tech text-secondary mb-2">{t('Password Analysis')}</h3>
               <div className="flex items-center space-x-2 mb-4">
-                <Progress
-                  value={(result.strength.score + 1) * 20}
-                  className="h-2"
-                  indicatorClassName={cn(getScoreColor(result.strength.score))}
-                />
+                <div className={cn("h-2 rounded-full w-full overflow-hidden bg-secondary/20")}>
+                  <div 
+                    className={cn("h-full transition-all", getScoreColor(result.strength.score))}
+                    style={{ width: `${(result.strength.score + 1) * 20}%` }}
+                  />
+                </div>
                 <span className="font-mono text-sm">
                   {result.strength.score}/4
                 </span>

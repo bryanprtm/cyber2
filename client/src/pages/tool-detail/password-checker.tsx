@@ -59,7 +59,7 @@ export default function PasswordCheckerPage() {
           
           <div className="bg-card border border-accent/30 rounded-md p-4">
             <h2 className="text-lg font-tech text-accent mb-4">Terminal Output</h2>
-            <Terminal className="h-80 text-xs" />
+            <Terminal className="h-80 text-xs" lines={[]} />
           </div>
         </div>
       </div>
