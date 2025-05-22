@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupWebSocketServer } from "./tools/wsServer";
 import { handlePortScan, handlePingSweep, getScanHistory } from "./controllers/scanController";
+import { handleWhoisLookup } from "./controllers/whoisController";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API Routes - all prefixed with /api
@@ -76,6 +77,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Ping Sweep API - Using controller with database integration
   app.post("/api/scan/ping-sweep", handlePingSweep);
+  
+  // WHOIS Lookup API - Using controller with database integration
+  app.post("/api/lookup/whois", handleWhoisLookup);
   
   // Get scan history for a user
   app.get("/api/scan/history/:userId", getScanHistory);

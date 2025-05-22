@@ -2,6 +2,7 @@ import { Server as HttpServer } from 'http';
 import WebSocket, { WebSocketServer } from 'ws';
 import { PortScanner, portScan, PortScannerOptions, PortScanResult, PortScanProgress } from './portScanner';
 import { PingSweepScanner, pingSweep, PingSweepOptions, PingSweepResult, PingSweepProgress } from './pingSweep';
+import { lookupDomain, WhoisOptions } from './whoisLookup';
 
 interface Message {
   type: string;
@@ -250,6 +251,27 @@ export function setupWebSocketServer(server: HttpServer) {
             });
           } catch (error) {
             sendError(ws, `Ping sweep failed: ${(error as Error).message}`);
+          }
+        }
+        
+        // WHOIS LOOKUP
+        else if (msg.type === 'whois_lookup') {
+          const options = msg.data as WhoisOptions;
+          
+          // Validate required fields
+          if (!options.domain) {
+            sendError(ws, 'Missing required field: domain is required');
+            return;
+          }
+          
+          try {
+            // Perform WHOIS lookup
+            const results = await lookupDomain(options);
+            
+            // Send results to client
+            sendMessage(ws, 'whois_results', results);
+          } catch (error) {
+            sendError(ws, `WHOIS lookup failed: ${(error as Error).message}`);
           }
         }
         
