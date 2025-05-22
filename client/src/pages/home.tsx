@@ -12,7 +12,7 @@ export default function Home() {
   
   useEffect(() => {
     // Simulate terminal initialization
-    addSystemLine("CyberPulse v1.0.2_alpha initialized");
+    addSystemLine("Security Operation Center v1.0.2_alpha initialized");
     addInfoLine("Loading system components...");
     
     const timer1 = setTimeout(() => {
@@ -114,7 +114,7 @@ export default function Home() {
           <MatrixBackground className="opacity-20" />
           <h2 className="text-xl font-tech mb-4 text-accent">Important Disclaimer</h2>
           <p className="text-sm font-mono text-muted-foreground max-w-2xl">
-            The tools provided by CyberPulse are intended for educational and ethical purposes only. 
+            The tools provided by Security Operation Center are intended for educational and ethical purposes only. 
             Always ensure you have proper authorization before testing any system or network. 
             Unauthorized scanning or testing may be illegal in your jurisdiction.
           </p>

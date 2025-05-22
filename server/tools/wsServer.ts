@@ -52,7 +52,7 @@ export function setupWebSocketServer(server: HttpServer) {
   });
   
   wss.on('connection', (ws: WebSocket) => {
-    console.log('CyberPulse WebSocket client connected');
+    console.log('Security Operation Center WebSocket client connected');
     
     ws.on('message', async (message: string) => {
       try {
@@ -225,7 +225,7 @@ export function setupWebSocketServer(server: HttpServer) {
     });
     
     ws.on('close', () => {
-      console.log('CyberPulse WebSocket client disconnected');
+      console.log('Security Operation Center WebSocket client disconnected');
     });
   });
 }

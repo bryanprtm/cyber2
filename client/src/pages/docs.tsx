@@ -10,7 +10,7 @@ export default function Docs() {
           <MatrixBackground />
           <h1 className="text-4xl font-tech mb-4 text-center text-primary">Documentation</h1>
           <p className="text-center font-mono text-muted-foreground">
-            Learn how to effectively use CyberPulse tools
+            Learn how to effectively use Security Operation Center tools
           </p>
         </div>
         
@@ -30,13 +30,13 @@ export default function Docs() {
           <TabsContent value="getting-started">
             <Card className="border-primary/30">
               <CardHeader>
-                <CardTitle className="text-2xl font-tech text-primary">Getting Started with CyberPulse</CardTitle>
+                <CardTitle className="text-2xl font-tech text-primary">Getting Started with Security Operation Center</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
                   <h3 className="text-xl font-tech mb-2 text-secondary">Introduction</h3>
                   <p className="font-mono text-muted-foreground">
-                    CyberPulse provides a collection of web-based security tools designed for penetration testing, 
+                    Security Operation Center provides a collection of web-based security tools designed for penetration testing, 
                     vulnerability scanning, and network analysis. This guide will help you get started with using 
                     the platform efficiently.
                   </p>
@@ -160,7 +160,7 @@ export default function Docs() {
                 <div>
                   <h3 className="text-xl font-tech mb-2 text-secondary">API Overview</h3>
                   <p className="font-mono text-muted-foreground">
-                    CyberPulse provides a RESTful API that allows you to programmatically access the platform's 
+                    Security Operation Center provides a RESTful API that allows you to programmatically access the platform's 
                     security tools. This reference documents the available endpoints and how to use them.
                   </p>
                 </div>
