@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { storage } from '../storage';
 import { portScan, PortScannerOptions } from '../tools/portScanner';
+import { pingSweep, PingSweepOptions } from '../tools/pingSweep';
 import { InsertScanResult } from '@shared/schema';
 
 // Controller for handling port scan requests
@@ -94,6 +95,113 @@ export async function handlePortScan(req: Request, res: Response) {
     res.status(500).json({ 
       success: false, 
       message: `Port scan failed: ${(error as Error).message}` 
+    });
+  }
+}
+
+// Controller for handling ping sweep requests and saving results
+export async function handlePingSweep(req: Request, res: Response) {
+  const { target, timeout, parallel, retries, resolveHostnames, userId, toolId, results, duration } = req.body;
+  
+  try {
+    // If results are already provided (from WebSocket scan), just save them
+    if (results && userId) {
+      try {
+        const scanResultData: InsertScanResult = {
+          userId,
+          toolId: toolId || 'ping-sweep',
+          target,
+          results,
+          status: 'completed',
+          duration: duration || '0s'
+        };
+        
+        const savedResult = await storage.createScanResult(scanResultData);
+        
+        // Log tool execution
+        await storage.createToolExecutionLog({
+          userId,
+          toolId: toolId || 'ping-sweep',
+          parameters: {
+            target,
+            timeout,
+            parallel,
+            retries,
+            resolveHostnames
+          },
+          sourceIp: req.ip,
+          userAgent: req.headers['user-agent']
+        });
+        
+        return res.json({
+          success: true,
+          message: 'Ping sweep results saved to database',
+          scanId: savedResult.id
+        });
+      } catch (dbError) {
+        console.error('Failed to save ping sweep result to database:', dbError);
+        return res.status(500).json({
+          success: false, 
+          message: `Failed to save scan result: ${(dbError as Error).message}`
+        });
+      }
+    } else {
+      // If no target or userId provided
+      if (!target) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Target is required" 
+        });
+      }
+      
+      if (!userId) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "userId is required to save results" 
+        });
+      }
+      
+      // Execute a new ping sweep (fallback if not coming from WebSocket)
+      const options: PingSweepOptions = {
+        target,
+        timeout: timeout || 1000,
+        parallel: parallel || 20,
+        retries: retries || 1,
+        resolveHostnames: resolveHostnames !== false
+      };
+      
+      const startTime = Date.now();
+      const scanResults = await pingSweep(options);
+      const scanDuration = ((Date.now() - startTime) / 1000).toFixed(2) + 's';
+      
+      // Save to database
+      const scanResultData: InsertScanResult = {
+        userId,
+        toolId: 'ping-sweep',
+        target,
+        results: scanResults,
+        status: 'completed',
+        duration: scanDuration
+      };
+      
+      const savedResult = await storage.createScanResult(scanResultData);
+      
+      // Return results
+      return res.json({
+        success: true,
+        results: {
+          aliveHosts: scanResults.filter(r => r.status === 'alive').length,
+          totalHosts: scanResults.length,
+          scanDuration
+        },
+        scanId: savedResult.id
+      });
+    }
+  } catch (error) {
+    console.error('Ping sweep error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: `Ping sweep failed: ${(error as Error).message}` 
     });
   }
 }
