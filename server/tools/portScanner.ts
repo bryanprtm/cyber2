@@ -325,8 +325,10 @@ export class PortScanner extends EventEmitter {
       }
     }
     
-    // Remove duplicates and sort
-    return [...new Set(result)].sort((a, b) => a - b);
+    // Remove duplicates and sort (using filter for compatibility)
+    return result.filter((value, index, self) => 
+      self.indexOf(value) === index
+    ).sort((a, b) => a - b);
   }
 }
 

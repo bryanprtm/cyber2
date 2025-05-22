@@ -1,6 +1,6 @@
 import { Server as HttpServer } from 'http';
 import WebSocket, { WebSocketServer } from 'ws';
-import { portScan, PortScannerOptions, PortScanResult } from './portScanner';
+import { PortScanner, portScan, PortScannerOptions, PortScanResult, PortScanProgress } from './portScanner';
 
 interface Message {
   type: string;
@@ -40,20 +40,62 @@ export function setupWebSocketServer(server: HttpServer) {
           });
           
           try {
-            // Run the port scan
-            const results = await portScan(options);
+            // Use the PortScanner class for more control and progress updates
+            const scanner = new PortScanner(options);
             
-            // Send results
+            // Parse port range to get total count for initial message
+            const portList = scanner['parsePortRange'](options.ports);
+            const totalPorts = portList.length;
+            
+            // Add total ports to the scan_start message
+            sendMessage(ws, 'scan_start', {
+              target: options.target,
+              ports: options.ports,
+              timestamp: new Date().toISOString(),
+              totalPorts: totalPorts
+            });
+            
+            // Setup progress handler
+            scanner.on('progress', (progress: PortScanProgress) => {
+              // Send scan progress updates
+              sendMessage(ws, 'scan_progress', {
+                target: options.target,
+                port: progress.port,
+                status: progress.status,
+                service: progress.service,
+                completed: progress.completed,
+                total: progress.total,
+                timestamp: new Date().toISOString()
+              });
+            });
+            
+            // Handle warnings (like rate limiting)
+            scanner.on('warning', (warning) => {
+              sendMessage(ws, 'scan_warning', {
+                message: warning.message,
+                timestamp: new Date().toISOString()
+              });
+            });
+            
+            // Run the scan
+            const results = await scanner.start();
+            
+            // Calculate summary statistics
+            const summary = generateSummary(results);
+            
+            // Send final results
             sendMessage(ws, 'scan_results', {
               target: options.target,
               results,
               timestamp: new Date().toISOString(),
-              summary: generateSummary(results)
+              summary
             });
             
             // Send completion message
             sendMessage(ws, 'scan_complete', {
-              timestamp: new Date().toISOString()
+              timestamp: new Date().toISOString(),
+              results,
+              summary
             });
           } catch (error) {
             sendError(ws, `Port scan failed: ${(error as Error).message}`);
