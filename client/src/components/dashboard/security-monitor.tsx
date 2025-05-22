@@ -49,7 +49,8 @@ import {
   Eye,
   Activity,
   Anchor,
-  Radio
+  Radio,
+  Info as InfoIcon
 } from "lucide-react";
 import { tools } from "@/data/tool-categories";
 
@@ -1885,6 +1886,406 @@ export default function SecurityMonitor() {
                         )}
                       </div>
                     )}
+                  </Card>
+                </TabsContent>
+                
+                {/* Security Recommendations Tab */}
+                <TabsContent value="recommendations" className="space-y-6">
+                  <Card className="p-4 bg-card/80 border-secondary/30">
+                    <h3 className="font-tech text-secondary mb-4">🛡️ Security Recommendations</h3>
+                    
+                    {securityRecommendations.length > 0 ? (
+                      <div className="space-y-6">
+                        {/* Critical Recommendations */}
+                        {securityRecommendations.filter(r => r.category === 'critical').length > 0 && (
+                          <div>
+                            <h4 className="text-red-500 font-tech text-sm mb-3 flex items-center">
+                              <AlertCircle className="w-4 h-4 mr-2" />
+                              Critical Actions (High Priority)
+                            </h4>
+                            
+                            <div className="space-y-2">
+                              {securityRecommendations
+                                .filter(r => r.category === 'critical')
+                                .map(rec => (
+                                  <Card key={rec.id} className="p-3 border-red-500/30 bg-red-500/5">
+                                    <h5 className="font-semibold flex items-center text-red-500">
+                                      <ShieldAlert className="w-4 h-4 mr-2" />
+                                      {rec.title}
+                                    </h5>
+                                    <p className="text-sm mt-1">{rec.description}</p>
+                                    <div className="flex justify-between mt-2 text-xs">
+                                      <div className="space-x-2">
+                                        <span className="inline-flex items-center bg-red-500/10 text-red-500 px-2 py-0.5 rounded">
+                                          <Zap className="w-3 h-3 mr-1" />
+                                          Impact: {rec.impact}
+                                        </span>
+                                        <span className="inline-flex items-center bg-secondary/10 text-secondary px-2 py-0.5 rounded">
+                                          <Clock className="w-3 h-3 mr-1" />
+                                          Effort: {rec.effort}
+                                        </span>
+                                      </div>
+                                      <span className="text-muted-foreground">{rec.status === 'new' ? 'New' : rec.status}</span>
+                                    </div>
+                                  </Card>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Important Recommendations */}
+                        {securityRecommendations.filter(r => r.category === 'important').length > 0 && (
+                          <div>
+                            <h4 className="text-orange-500 font-tech text-sm mb-3 flex items-center">
+                              <AlertTriangle className="w-4 h-4 mr-2" />
+                              Important Actions (Medium Priority)
+                            </h4>
+                            
+                            <div className="space-y-2">
+                              {securityRecommendations
+                                .filter(r => r.category === 'important')
+                                .map(rec => (
+                                  <Card key={rec.id} className="p-3 border-orange-500/30 bg-orange-500/5">
+                                    <h5 className="font-semibold flex items-center text-orange-500">
+                                      <Shield className="w-4 h-4 mr-2" />
+                                      {rec.title}
+                                    </h5>
+                                    <p className="text-sm mt-1">{rec.description}</p>
+                                    <div className="flex justify-between mt-2 text-xs">
+                                      <div className="space-x-2">
+                                        <span className="inline-flex items-center bg-orange-500/10 text-orange-500 px-2 py-0.5 rounded">
+                                          <Zap className="w-3 h-3 mr-1" />
+                                          Impact: {rec.impact}
+                                        </span>
+                                        <span className="inline-flex items-center bg-secondary/10 text-secondary px-2 py-0.5 rounded">
+                                          <Clock className="w-3 h-3 mr-1" />
+                                          Effort: {rec.effort}
+                                        </span>
+                                      </div>
+                                      <span className="text-muted-foreground">{rec.status === 'new' ? 'New' : rec.status}</span>
+                                    </div>
+                                  </Card>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Recommended Actions */}
+                        {securityRecommendations.filter(r => r.category === 'recommended').length > 0 && (
+                          <div>
+                            <h4 className="text-blue-500 font-tech text-sm mb-3 flex items-center">
+                              <InfoIcon className="w-4 h-4 mr-2" />
+                              Recommended Actions (Best Practices)
+                            </h4>
+                            
+                            <div className="space-y-2">
+                              {securityRecommendations
+                                .filter(r => r.category === 'recommended')
+                                .map(rec => (
+                                  <Card key={rec.id} className="p-3 border-blue-500/30 bg-blue-500/5">
+                                    <h5 className="font-semibold flex items-center text-blue-500">
+                                      <Shield className="w-4 h-4 mr-2" />
+                                      {rec.title}
+                                    </h5>
+                                    <p className="text-sm mt-1">{rec.description}</p>
+                                    <div className="flex justify-between mt-2 text-xs">
+                                      <div className="space-x-2">
+                                        <span className="inline-flex items-center bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded">
+                                          <Zap className="w-3 h-3 mr-1" />
+                                          Impact: {rec.impact}
+                                        </span>
+                                        <span className="inline-flex items-center bg-secondary/10 text-secondary px-2 py-0.5 rounded">
+                                          <Clock className="w-3 h-3 mr-1" />
+                                          Effort: {rec.effort}
+                                        </span>
+                                      </div>
+                                      <span className="text-muted-foreground">{rec.status === 'new' ? 'New' : rec.status}</span>
+                                    </div>
+                                  </Card>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* DNSSEC Recommendation */}
+                        <div className="mt-6 p-4 border border-primary/20 rounded-md bg-primary/5">
+                          <h4 className="font-tech text-primary flex items-center">
+                            <Radio className="w-4 h-4 mr-2" />
+                            DNSSEC Configuration
+                          </h4>
+                          <div className="flex items-center mt-3">
+                            <div className="bg-destructive/10 p-2 rounded-full text-destructive">
+                              <XCircle className="h-6 w-6" />
+                            </div>
+                            <div className="ml-3">
+                              <p className="font-medium">DNSSEC is not enabled for this domain</p>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                DNSSEC adds an additional layer of security to DNS by digitally signing DNS records.
+                                This helps prevent DNS spoofing and cache poisoning attacks.
+                              </p>
+                            </div>
+                          </div>
+                          <div className="mt-3 text-sm">
+                            <p className="font-medium">How to enable DNSSEC:</p>
+                            <ol className="list-decimal ml-5 mt-1 space-y-1 text-muted-foreground">
+                              <li>Contact your DNS provider or domain registrar</li>
+                              <li>Request DNSSEC enablement for your domain</li>
+                              <li>Follow their specific instructions for implementation</li>
+                              <li>Verify proper DNSSEC setup using online DNSSEC validators</li>
+                            </ol>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-8 text-center">
+                        <Shield className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
+                        <p className="text-muted-foreground">No recommendations available yet. Run a scan to get security recommendations.</p>
+                      </div>
+                    )}
+                  </Card>
+                </TabsContent>
+                
+                {/* Visualizations Tab */}
+                <TabsContent value="visualizations" className="space-y-6">
+                  <Card className="p-4 bg-card/80 border-secondary/30">
+                    <h3 className="font-tech text-secondary mb-4">Security Visualizations</h3>
+                    
+                    <div className="space-y-8">
+                      {/* Security Timeline */}
+                      <div>
+                        <h4 className="text-primary text-sm font-tech mb-3 flex items-center">
+                          <Calendar className="w-4 h-4 mr-2" />
+                          Security Status Timeline (Last 7 Days)
+                        </h4>
+                        
+                        {timelineEntries.length > 0 ? (
+                          <div className="space-y-4">
+                            <div className="h-48 bg-muted/20 border border-muted rounded-md relative">
+                              <div className="absolute inset-x-0 bottom-0 h-36 px-4 pt-4">
+                                <div className="relative h-32">
+                                  {/* Y-axis labels */}
+                                  <div className="absolute left-0 inset-y-0 w-8 flex flex-col justify-between text-xs text-muted-foreground pointer-events-none">
+                                    <span>100</span>
+                                    <span>75</span>
+                                    <span>50</span>
+                                    <span>25</span>
+                                    <span>0</span>
+                                  </div>
+                                  
+                                  {/* Chart bars */}
+                                  <div className="ml-8 h-full flex items-end justify-between">
+                                    {timelineEntries.map((entry, index) => (
+                                      <div key={index} className="flex flex-col items-center">
+                                        <div 
+                                          className={`w-8 ${
+                                            entry.status === "safe" ? "bg-green-500" : 
+                                            entry.status === "warning" ? "bg-yellow-500" : 
+                                            "bg-red-500"
+                                          } rounded-t`} 
+                                          style={{ height: `${(entry.score / 100) * 100}%` }}
+                                          title={`Score: ${entry.score}`}
+                                        />
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* X-axis labels (dates) */}
+                              <div className="absolute inset-x-0 bottom-0 px-4 pb-2">
+                                <div className="ml-8 flex justify-between text-xs text-muted-foreground">
+                                  {timelineEntries.map((entry, index) => (
+                                    <div key={index} className="w-8 text-center">
+                                      {entry.date.toLocaleDateString(undefined, { day: 'numeric', month: 'numeric' })}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                              
+                              {/* Grid lines */}
+                              <div className="absolute inset-0 grid grid-cols-1 grid-rows-4 h-36 mt-4 ml-8 mr-4 pointer-events-none">
+                                {[...Array(4)].map((_, i) => (
+                                  <div key={i} className="border-t border-muted/30"></div>
+                                ))}
+                              </div>
+                            </div>
+                            
+                            {/* Timeline events */}
+                            <div className="space-y-2">
+                              <h5 className="text-xs font-semibold text-muted-foreground">Notable Security Events:</h5>
+                              {timelineEntries.flatMap((entry, dayIndex) => 
+                                entry.events.map((event, eventIndex) => (
+                                  <div key={`${dayIndex}-${eventIndex}`} className="flex items-center text-sm">
+                                    <div className={`h-2 w-2 rounded-full ${
+                                      entry.status === "safe" ? "bg-green-500" : 
+                                      entry.status === "warning" ? "bg-yellow-500" : 
+                                      "bg-red-500"
+                                    } mr-2`}></div>
+                                    <span className="text-muted-foreground">
+                                      {entry.date.toLocaleDateString()} - 
+                                    </span>
+                                    <span className="ml-1">{event}</span>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center p-8 text-muted-foreground">
+                            <Clock className="h-8 w-8 mx-auto mb-2" />
+                            <p>Timeline data will be available after running a scan</p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Security Radar */}
+                      <div>
+                        <h4 className="text-primary text-sm font-tech mb-3 flex items-center">
+                          <Radar className="w-4 h-4 mr-2" />
+                          Security Category Radar
+                        </h4>
+                        
+                        <div className="h-72 bg-muted/20 border border-muted rounded-md relative flex items-center justify-center">
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            {/* Radar circles */}
+                            {[...Array(4)].map((_, i) => (
+                              <div 
+                                key={i} 
+                                className="absolute rounded-full border border-muted/30"
+                                style={{ 
+                                  width: `${(i + 1) * 25}%`, 
+                                  height: `${(i + 1) * 25}%`,
+                                  opacity: 0.4 + (i * 0.15)
+                                }}
+                              ></div>
+                            ))}
+                            
+                            {/* Radar lines */}
+                            <div className="absolute h-full w-full">
+                              {[...Array(6)].map((_, i) => (
+                                <div 
+                                  key={i} 
+                                  className="absolute top-1/2 left-1/2 h-1/2 border-l border-muted/30"
+                                  style={{ 
+                                    transform: `rotate(${60 * i}deg)`, 
+                                    transformOrigin: 'bottom center'
+                                  }}
+                                ></div>
+                              ))}
+                            </div>
+                            
+                            {/* Categories */}
+                            <div className="absolute h-full w-full text-xs text-muted-foreground">
+                              <div className="absolute top-2 left-1/2 transform -translate-x-1/2">Network Security</div>
+                              <div className="absolute top-1/4 right-6 transform rotate-60">Application Security</div>
+                              <div className="absolute bottom-1/4 right-6 transform rotate-120">Authentication</div>
+                              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">Data Protection</div>
+                              <div className="absolute bottom-1/4 left-6 transform -rotate-120">Configuration</div>
+                              <div className="absolute top-1/4 left-6 transform -rotate-60">Web Reputation</div>
+                            </div>
+                            
+                            {/* Data polygon */}
+                            <div className="absolute h-full w-full z-10">
+                              <svg viewBox="-50 -50 100 100" className="h-full w-full">
+                                <polygon 
+                                  points="0,-35 30,-17.5 30,17.5 0,35 -30,17.5 -30,-17.5" 
+                                  fill="rgba(124, 58, 237, 0.2)" 
+                                  stroke="rgba(124, 58, 237, 0.8)" 
+                                  strokeWidth="1"
+                                />
+                                {/* Points */}
+                                <circle cx="0" cy="-35" r="2" fill="rgba(124, 58, 237, 1)" />
+                                <circle cx="30" cy="-17.5" r="2" fill="rgba(124, 58, 237, 1)" />
+                                <circle cx="30" cy="17.5" r="2" fill="rgba(124, 58, 237, 1)" />
+                                <circle cx="0" cy="35" r="2" fill="rgba(124, 58, 237, 1)" />
+                                <circle cx="-30" cy="17.5" r="2" fill="rgba(124, 58, 237, 1)" />
+                                <circle cx="-30" cy="-17.5" r="2" fill="rgba(124, 58, 237, 1)" />
+                              </svg>
+                            </div>
+                          </div>
+                          
+                          <div className="absolute bottom-2 right-2 text-xs text-muted-foreground">
+                            Scale: 0 (center) - 100 (edge)
+                          </div>
+                        </div>
+                        
+                        {/* Scores */}
+                        <div className="grid grid-cols-3 gap-2 mt-4">
+                          <div className="p-2 border border-muted rounded text-center">
+                            <div className="text-primary text-sm font-semibold">Network</div>
+                            <div className="text-lg font-bold">{Math.floor(Math.random() * 30) + 70}/100</div>
+                          </div>
+                          <div className="p-2 border border-muted rounded text-center">
+                            <div className="text-primary text-sm font-semibold">Application</div>
+                            <div className="text-lg font-bold">{Math.floor(Math.random() * 40) + 60}/100</div>
+                          </div>
+                          <div className="p-2 border border-muted rounded text-center">
+                            <div className="text-primary text-sm font-semibold">Authentication</div>
+                            <div className="text-lg font-bold">{Math.floor(Math.random() * 50) + 50}/100</div>
+                          </div>
+                          <div className="p-2 border border-muted rounded text-center">
+                            <div className="text-primary text-sm font-semibold">Data</div>
+                            <div className="text-lg font-bold">{Math.floor(Math.random() * 30) + 70}/100</div>
+                          </div>
+                          <div className="p-2 border border-muted rounded text-center">
+                            <div className="text-primary text-sm font-semibold">Configuration</div>
+                            <div className="text-lg font-bold">{Math.floor(Math.random() * 40) + 60}/100</div>
+                          </div>
+                          <div className="p-2 border border-muted rounded text-center">
+                            <div className="text-primary text-sm font-semibold">Web Reputation</div>
+                            <div className="text-lg font-bold">{Math.floor(Math.random() * 30) + 70}/100</div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Threat Origin Map */}
+                      {threatOrigins.length > 0 && (
+                        <div>
+                          <h4 className="text-primary text-sm font-tech mb-3 flex items-center">
+                            <Map className="w-4 h-4 mr-2" />
+                            Origin of Threats
+                          </h4>
+                          
+                          <div className="border border-muted rounded-md overflow-hidden">
+                            <div className="h-64 bg-muted/20 relative">
+                              <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
+                                [World Map Visualization - Interactive map in real implementation]
+                              </div>
+                              
+                              {/* Country labels (simulated) */}
+                              {threatOrigins.map((origin, idx) => (
+                                <div 
+                                  key={idx}
+                                  className="absolute bg-background/80 text-xs border border-red-500/50 px-1.5 py-0.5 rounded-sm"
+                                  style={{
+                                    top: `${20 + (idx * 12)}%`,
+                                    left: `${10 + (idx * 15)}%`,
+                                  }}
+                                >
+                                  <div className="font-semibold">{origin.country} ({origin.countryCode})</div>
+                                  <div className="text-muted-foreground text-[10px]">{origin.attackType}: {origin.count}</div>
+                                </div>
+                              ))}
+                            </div>
+                            
+                            <div className="bg-muted/10 p-2">
+                              <h5 className="text-xs font-semibold mb-2">Top Attack Sources:</h5>
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                {threatOrigins.map((origin, idx) => (
+                                  <div key={idx} className="flex justify-between items-center text-xs p-1.5 bg-background/50 rounded">
+                                    <div className="flex items-center">
+                                      <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                                      <span>{origin.country}</span>
+                                    </div>
+                                    <span className="font-mono">{origin.count}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </Card>
                 </TabsContent>
                 
