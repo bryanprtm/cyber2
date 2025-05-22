@@ -78,7 +78,7 @@ export default function HeaderAnalyzerPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('security');
   const { toast } = useToast();
-  const { addCommandLine, addInfoLine, addErrorLine, addSuccessLine, clearLines } = useTerminal();
+  const { lines, addCommandLine, addInfoLine, addErrorLine, addSuccessLine, clearLines } = useTerminal();
 
   // Validate URL format
   const isValidUrl = (url: string) => {
@@ -103,7 +103,7 @@ export default function HeaderAnalyzerPage() {
     
     if (!isValidUrl(normalizedUrl)) {
       setError('Invalid URL format. Example: https://example.com');
-      addErrorLine('error', 'Error: Invalid URL format. Example: https://example.com');
+      addErrorLine('Error: Invalid URL format. Example: https://example.com');
       return;
     }
 
@@ -120,16 +120,18 @@ export default function HeaderAnalyzerPage() {
     }
 
     try {
-      const response = await apiMutation({
-        url: '/api/analyze/headers',
+      const response = await fetch('/api/analyze/headers', {
         method: 'POST',
-        data: {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
           url: normalizedUrl,
           followRedirects,
           userAgent: userAgent || undefined,
           timeout: 10000
-        }
-      });
+        })
+      }).then(res => res.json());
 
       if (response.success) {
         setResults(response.data);
@@ -148,23 +150,10 @@ export default function HeaderAnalyzerPage() {
           addSuccessLine('Security headers are well configured');
         }
 
-        // Save scan result to database
-        await apiMutation({
-          url: '/api/scan/save',
-          method: 'POST',
-          data: {
-            toolId: 'header-analyzer',
-            targetUrl: normalizedUrl,
-            results: response.data,
-            timestamp: new Date().toISOString()
-          }
-        }).then(saveResponse => {
-          if (saveResponse.success) {
-            addSuccessLine(`Scan results saved with ID: ${saveResponse.data.id}`);
-          }
-        }).catch(() => {
-          addErrorLine('Failed to save scan results to database');
-        });
+        // Results are already saved by the controller
+        if (response.data.scanId) {
+          addSuccessLine(`Scan results saved with ID: ${response.data.scanId}`);
+        }
       } else {
         throw new Error(response.message || 'Analysis failed');
       }
@@ -296,7 +285,7 @@ export default function HeaderAnalyzerPage() {
             
             <div className="mt-8">
               <h3 className="text-lg font-semibold mb-2">{t('header.analyzer.terminal', 'Analysis Log')}</h3>
-              <Terminal lines={[]} maxHeight="200px" />
+              <Terminal lines={lines} maxHeight="200px" />
             </div>
           </Card>
         </div>
@@ -359,12 +348,7 @@ export default function HeaderAnalyzerPage() {
                   </div>
                   <Progress 
                     value={results.securityScore} 
-                    className={cn(
-                      "h-2",
-                      results.securityScore >= 80 ? "bg-green-500" : 
-                      results.securityScore >= 50 ? "bg-yellow-500" : 
-                      "bg-red-500"
-                    )}
+                    className="h-2"
                   />
                 </div>
               </div>
