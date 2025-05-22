@@ -124,12 +124,12 @@ export default function ShellUploaderPage() {
         }
         
         // Report on upload attempts
-        const successfulAttempts = uploadAttempts.filter(a => a.status === 'success');
+        const successfulAttempts = uploadAttempts.filter((a: UploadAttempt) => a.status === 'success');
         addInfoLine(`Upload strategies analyzed: ${uploadAttempts.length}`);
         
         if (successfulAttempts.length > 0) {
           addSuccessLine(`Found ${successfulAttempts.length} potentially successful upload methods`);
-          successfulAttempts.slice(0, 3).forEach(attempt => {
+          successfulAttempts.slice(0, 3).forEach((attempt: UploadAttempt) => {
             addInfoLine(`Strategy: ${attempt.strategy}`);
           });
         } else {
@@ -179,7 +179,7 @@ export default function ShellUploaderPage() {
     if (!results.uploadSuccess) return 'low';
     if (results.wafDetected && !results.uploadSuccess) return 'low';
     if (results.wafDetected && results.uploadSuccess) return 'medium';
-    if (results.uploadSuccess && results.uploadAttempts.filter(a => a.status === 'success').length > 1) return 'high';
+    if (results.uploadSuccess && results.uploadAttempts.filter((a: UploadAttempt) => a.status === 'success').length > 1) return 'high';
     return 'medium';
   };
 
@@ -347,7 +347,7 @@ export default function ShellUploaderPage() {
                             {getVulnerabilityLevel(results) === 'high' && (
                               <>
                                 <Badge variant="destructive" className="mb-2">High Risk</Badge>
-                                <Progress value={90} className="h-2 bg-red-950" indicatorClassName="bg-red-500" />
+                                <Progress value={90} className="h-2 bg-red-950" />
                               </>
                             )}
                             {getVulnerabilityLevel(results) === 'medium' && (
@@ -355,7 +355,7 @@ export default function ShellUploaderPage() {
                                 <Badge variant="outline" className="bg-orange-500/20 text-orange-500 border-orange-500/50 mb-2">
                                   Medium Risk
                                 </Badge>
-                                <Progress value={50} className="h-2 bg-orange-950" indicatorClassName="bg-orange-500" />
+                                <Progress value={50} className="h-2 bg-orange-950" />
                               </>
                             )}
                             {getVulnerabilityLevel(results) === 'low' && (
@@ -363,7 +363,7 @@ export default function ShellUploaderPage() {
                                 <Badge variant="outline" className="bg-blue-500/20 text-blue-500 border-blue-500/50 mb-2">
                                   Low Risk
                                 </Badge>
-                                <Progress value={20} className="h-2 bg-blue-950" indicatorClassName="bg-blue-500" />
+                                <Progress value={20} className="h-2 bg-blue-950" />
                               </>
                             )}
                           </div>
@@ -627,7 +627,7 @@ move_uploaded_file($file['tmp_name'], $uploadPath . $newFileName);`}
                             <div className="col-span-3">{attempt.fileType || 'N/A'}</div>
                             <div className="col-span-2">
                               {attempt.status === 'success' ? (
-                                <Badge variant="success" className="bg-green-600">Success</Badge>
+                                <Badge variant="default" className="bg-green-600">Success</Badge>
                               ) : (
                                 <Badge variant="outline">Failed</Badge>
                               )}
