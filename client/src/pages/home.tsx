@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Terminal from "@/components/terminal";
 import { MatrixBackground } from "@/components/matrix-background";
-import ThreatMap from "@/components/threat-map";
+import CheckpointThreatMap from "@/components/checkpoint-threat-map";
 import { useEffect } from "react";
 import { useTerminal } from "@/hooks/use-terminal";
 
@@ -80,7 +80,7 @@ export default function Home() {
         
         <div className="relative mb-16">
           <h2 className="text-2xl font-tech mb-6 text-center">Live Cyber Threat Intelligence</h2>
-          <ThreatMap />
+          <CheckpointThreatMap />
         </div>
         
         <div className="relative">
