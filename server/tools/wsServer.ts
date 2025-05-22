@@ -11,6 +11,39 @@ interface Message {
 
 let wss: WebSocketServer | null = null;
 
+/**
+ * Send a message to a WebSocket client
+ */
+function sendMessage(ws: WebSocket, type: string, data: any) {
+  if (ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type, data }));
+  }
+}
+
+/**
+ * Send an error message to a WebSocket client
+ */
+function sendError(ws: WebSocket, message: string) {
+  sendMessage(ws, 'error', { message });
+}
+
+/**
+ * Generate summary statistics for port scan results
+ */
+function generatePortScanSummary(results: PortScanResult[]) {
+  const openPorts = results.filter(r => r.status === 'open').length;
+  const closedPorts = results.filter(r => r.status === 'closed').length;
+  const filteredPorts = results.filter(r => r.status === 'filtered').length;
+  
+  return {
+    totalScanned: results.length,
+    openPorts,
+    closedPorts,
+    filteredPorts,
+    timestamp: new Date().toISOString()
+  };
+}
+
 export function setupWebSocketServer(server: HttpServer) {
   // Use a different path to avoid conflict with Vite's WebSocket server
   wss = new WebSocketServer({ 
