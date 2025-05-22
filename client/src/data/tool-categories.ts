@@ -117,6 +117,13 @@ export const tools: Tool[] = [
     category: "info",
     categoryLabel: "Files"
   },
+  {
+    id: "phone-doxing",
+    name: "Phone Doxing Tool",
+    description: "Gather information about phone numbers, carriers, and potential owners.",
+    category: "info",
+    categoryLabel: "OSINT"
+  },
   
   // Security Testing Tools
   {
