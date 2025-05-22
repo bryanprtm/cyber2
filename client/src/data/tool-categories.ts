@@ -124,6 +124,13 @@ export const tools: Tool[] = [
     category: "info",
     categoryLabel: "OSINT"
   },
+  {
+    id: "whois-lookup",
+    name: "WHOIS Lookup",
+    description: "Comprehensive domain WHOIS lookup with visual data representation and analysis.",
+    category: "info",
+    categoryLabel: "Domain"
+  },
   
   // Security Testing Tools
   {
