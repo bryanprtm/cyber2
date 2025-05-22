@@ -33,7 +33,23 @@ import {
   Server,
   Search,
   Globe,
-  Lock
+  Lock,
+  AlertTriangle,
+  Calendar,
+  Clock,
+  Network,
+  Database,
+  Bug,
+  Radar,
+  BarChart2,
+  Map,
+  Zap,
+  Cpu,
+  Wifi,
+  Eye,
+  Activity,
+  Anchor,
+  Radio
 } from "lucide-react";
 import { tools } from "@/data/tool-categories";
 
@@ -64,6 +80,58 @@ interface CategoryStats {
   name: string;
   count: number;
   vulnerabilities: number;
+}
+
+interface SecurityOverview {
+  status: "safe" | "warning" | "danger";
+  score: number;
+  lastAnalyzed: Date;
+  statusText: string;
+}
+
+interface CVEEntry {
+  id: string;
+  severity: "critical" | "high" | "medium" | "low";
+  description: string;
+  affectedComponent: string;
+  publishedDate: Date;
+  fixAvailable: boolean;
+}
+
+interface ThreatIntelligence {
+  isPhishing: boolean;
+  isMalware: boolean;
+  isBotnet: boolean;
+  isBlacklisted: boolean;
+  blacklistSources: string[];
+  abuseReports: number;
+  lastReportDate?: Date;
+  riskScore: number;
+}
+
+interface SecurityRecommendation {
+  id: string;
+  category: "critical" | "important" | "recommended";
+  title: string;
+  description: string;
+  impact: "high" | "medium" | "low";
+  effort: "high" | "medium" | "low";
+  status: "new" | "in-progress" | "completed" | "ignored";
+}
+
+interface TimelineEntry {
+  date: Date;
+  status: "safe" | "warning" | "danger";
+  score: number;
+  events: string[];
+}
+
+interface ThreatOrigin {
+  country: string;
+  countryCode: string;
+  attackType: string;
+  count: number;
+  lastSeen: Date;
 }
 
 // Utility functions
@@ -133,6 +201,16 @@ export default function SecurityMonitor() {
   const [conclusion, setConclusion] = useState<string>("");
   const [topVulnerabilities, setTopVulnerabilities] = useState<ScanResult[]>([]);
   
+  // New states for additional features
+  const [securityOverview, setSecurityOverview] = useState<SecurityOverview | null>(null);
+  const [cveEntries, setCveEntries] = useState<CVEEntry[]>([]);
+  const [threatIntelligence, setThreatIntelligence] = useState<ThreatIntelligence | null>(null);
+  const [securityRecommendations, setSecurityRecommendations] = useState<SecurityRecommendation[]>([]);
+  const [timelineEntries, setTimelineEntries] = useState<TimelineEntry[]>([]);
+  const [threatOrigins, setThreatOrigins] = useState<ThreatOrigin[]>([]);
+  const [securityScore, setSecurityScore] = useState<number>(0);
+  const [securityHistory, setSecurityHistory] = useState<{date: Date, score: number}[]>([]);
+  
   // Set up available tools
   const availableTools = tools.filter(tool => 
     ["network", "vulnerability", "web", "security", "info"].includes(tool.category)
@@ -154,8 +232,346 @@ export default function SecurityMonitor() {
       setCategoryStats([]);
       setConclusion("");
       setTopVulnerabilities([]);
+      setSecurityOverview(null);
+      setCveEntries([]);
+      setThreatIntelligence(null);
+      setSecurityRecommendations([]);
+      setTimelineEntries([]);
+      setThreatOrigins([]);
+      setSecurityScore(0);
+      setSecurityHistory([]);
     }
   }, [target]);
+  
+  // Generate simulated CVE entries
+  const generateCveEntries = (): CVEEntry[] => {
+    const cveList: CVEEntry[] = [];
+    const components = ['WordPress', 'Apache', 'OpenSSL', 'jQuery', 'PHP', 'MySQL', 'Nginx'];
+    const severities: ("critical" | "high" | "medium" | "low")[] = ['critical', 'high', 'medium', 'low'];
+    
+    // Generate 0-5 CVEs
+    const numCves = Math.floor(Math.random() * 6);
+    
+    for (let i = 0; i < numCves; i++) {
+      const year = 2020 + Math.floor(Math.random() * 6); // 2020-2025
+      const id = Math.floor(Math.random() * 10000) + 1000;
+      const component = components[Math.floor(Math.random() * components.length)];
+      const severity = severities[Math.floor(Math.random() * severities.length)];
+      
+      cveList.push({
+        id: `CVE-${year}-${id}`,
+        severity,
+        description: getRandomCveDescription(component, severity),
+        affectedComponent: component,
+        publishedDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000), // Random date in last 30 days
+        fixAvailable: Math.random() > 0.3 // 70% chance fix is available
+      });
+    }
+    
+    return cveList;
+  };
+  
+  // Generate threat intelligence data
+  const generateThreatIntelligence = (): ThreatIntelligence => {
+    const isPhishing = Math.random() < 0.15;
+    const isMalware = Math.random() < 0.1;
+    const isBotnet = Math.random() < 0.05;
+    const isBlacklisted = isPhishing || isMalware || isBotnet || Math.random() < 0.1;
+    
+    const blacklistSources = [];
+    if (isBlacklisted) {
+      const sources = ['Google Safe Browsing', 'VirusTotal', 'PhishTank', 'Spamhaus', 'SURBL', 'Barracuda'];
+      const numSources = Math.floor(Math.random() * 3) + 1;
+      
+      for (let i = 0; i < numSources; i++) {
+        const randIndex = Math.floor(Math.random() * sources.length);
+        blacklistSources.push(sources[randIndex]);
+        sources.splice(randIndex, 1); // Remove to avoid duplicates
+      }
+    }
+    
+    const abuseReports = isBlacklisted ? Math.floor(Math.random() * 10) + 1 : 0;
+    
+    let riskScore = 0;
+    if (isPhishing) riskScore += 40;
+    if (isMalware) riskScore += 50;
+    if (isBotnet) riskScore += 60;
+    if (blacklistSources.length > 0) riskScore += 20 * blacklistSources.length;
+    
+    // Cap at 100
+    riskScore = Math.min(100, riskScore);
+    
+    return {
+      isPhishing,
+      isMalware,
+      isBotnet,
+      isBlacklisted,
+      blacklistSources,
+      abuseReports,
+      lastReportDate: abuseReports > 0 ? new Date(Date.now() - Math.random() * 60 * 24 * 60 * 60 * 1000) : undefined,
+      riskScore
+    };
+  };
+  
+  // Generate security recommendations
+  const generateSecurityRecommendations = (
+    vulnerabilityStats: VulnerabilityStats,
+    cveEntries: CVEEntry[],
+    threatIntel: ThreatIntelligence
+  ): SecurityRecommendation[] => {
+    const recommendations: SecurityRecommendation[] = [];
+    
+    // SSL recommendations
+    if (Math.random() > 0.7) {
+      recommendations.push({
+        id: 'rec-ssl-1',
+        category: 'important',
+        title: 'Update SSL Certificate Configuration',
+        description: 'SSL certificate uses an outdated protocol. Update to TLS 1.3 and disable older TLS/SSL versions.',
+        impact: 'medium',
+        effort: 'low',
+        status: 'new'
+      });
+    }
+    
+    // Port recommendations
+    if (Math.random() > 0.6) {
+      recommendations.push({
+        id: 'rec-port-1',
+        category: Math.random() > 0.5 ? 'critical' : 'important',
+        title: 'Close Unnecessary Open Ports',
+        description: 'Unnecessary ports are open including port 21 (FTP) and 3306 (MySQL). Close these ports or restrict access.',
+        impact: 'high',
+        effort: 'medium',
+        status: 'new'
+      });
+    }
+    
+    // CMS recommendations
+    if (cveEntries.some(cve => cve.affectedComponent === 'WordPress')) {
+      recommendations.push({
+        id: 'rec-cms-1',
+        category: 'critical',
+        title: 'Update WordPress Core and Plugins',
+        description: 'WordPress installation has critical vulnerabilities. Update WordPress core and all plugins immediately.',
+        impact: 'high',
+        effort: 'medium',
+        status: 'new'
+      });
+    }
+    
+    // Firewall recommendations
+    if (vulnerabilityStats.high > 0 || vulnerabilityStats.critical > 0) {
+      recommendations.push({
+        id: 'rec-fw-1',
+        category: 'important',
+        title: 'Configure Web Application Firewall',
+        description: 'Implement and configure a web application firewall to protect against common attacks.',
+        impact: 'high',
+        effort: 'high',
+        status: 'new'
+      });
+    }
+    
+    // DNSSEC recommendations
+    if (Math.random() > 0.8) {
+      recommendations.push({
+        id: 'rec-dns-1',
+        category: 'recommended',
+        title: 'Enable DNSSEC',
+        description: 'DNSSEC is not enabled for this domain. Enable DNSSEC to protect against DNS spoofing attacks.',
+        impact: 'medium',
+        effort: 'medium',
+        status: 'new'
+      });
+    }
+    
+    // Blacklist remediation
+    if (threatIntel.isBlacklisted) {
+      recommendations.push({
+        id: 'rec-bl-1',
+        category: 'critical',
+        title: 'Address Blacklisting Issues',
+        description: `The domain is blacklisted on ${threatIntel.blacklistSources.join(', ')}. Investigate and remediate issues causing blacklisting.`,
+        impact: 'high',
+        effort: 'high',
+        status: 'new'
+      });
+    }
+    
+    // Add a few more random recommendations
+    const possibleRecommendations: SecurityRecommendation[] = [
+      {
+        id: 'rec-sec-1',
+        category: 'recommended',
+        title: 'Implement HTTP Security Headers',
+        description: 'Add security headers such as Content-Security-Policy, X-XSS-Protection, and X-Content-Type-Options.',
+        impact: 'medium',
+        effort: 'low',
+        status: 'new'
+      },
+      {
+        id: 'rec-sec-2',
+        category: 'recommended',
+        title: 'Enable Two-Factor Authentication',
+        description: 'Implement two-factor authentication for all admin access points.',
+        impact: 'medium',
+        effort: 'medium',
+        status: 'new'
+      },
+      {
+        id: 'rec-sec-3',
+        category: 'important',
+        title: 'Set Proper File Permissions',
+        description: 'File permissions are too permissive. Restrict file permissions to minimum necessary.',
+        impact: 'medium',
+        effort: 'medium',
+        status: 'new'
+      }
+    ];
+    
+    // Add 1-3 random recommendations
+    const numRandomRecs = Math.floor(Math.random() * 3) + 1;
+    for (let i = 0; i < numRandomRecs && i < possibleRecommendations.length; i++) {
+      recommendations.push(possibleRecommendations[i]);
+    }
+    
+    return recommendations;
+  };
+  
+  // Generate security timeline data for the last 7 days
+  const generateTimelineData = (): TimelineEntry[] => {
+    const timeline: TimelineEntry[] = [];
+    const now = new Date();
+    
+    // Generate data for last 7 days
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      
+      // Random status weighted toward "safe"
+      let status: "safe" | "warning" | "danger";
+      const rand = Math.random();
+      if (rand < 0.7) status = "safe";
+      else if (rand < 0.9) status = "warning";
+      else status = "danger";
+      
+      // Score based on status
+      let score: number;
+      if (status === "safe") score = 80 + Math.floor(Math.random() * 20);
+      else if (status === "warning") score = 50 + Math.floor(Math.random() * 30);
+      else score = 20 + Math.floor(Math.random() * 30);
+      
+      // Random events
+      const events: string[] = [];
+      if (status !== "safe" || Math.random() < 0.3) {
+        const possibleEvents = [
+          "Security scan completed",
+          "SSL certificate status checked",
+          "New vulnerability detected",
+          "Suspicious login attempt",
+          "Security patch applied",
+          "Configuration change detected",
+          "Firewall rule updated",
+          "DNS configuration changed"
+        ];
+        
+        const numEvents = Math.floor(Math.random() * 3) + 1;
+        for (let j = 0; j < numEvents; j++) {
+          events.push(possibleEvents[Math.floor(Math.random() * possibleEvents.length)]);
+        }
+      }
+      
+      timeline.push({
+        date,
+        status,
+        score,
+        events
+      });
+    }
+    
+    return timeline;
+  };
+  
+  // Generate threat origins (countries attempting attacks)
+  const generateThreatOrigins = (): ThreatOrigin[] => {
+    const origins: ThreatOrigin[] = [];
+    const countries = [
+      { name: 'Russian Federation', code: 'RU' },
+      { name: 'China', code: 'CN' },
+      { name: 'United States', code: 'US' },
+      { name: 'Brazil', code: 'BR' },
+      { name: 'Nigeria', code: 'NG' },
+      { name: 'India', code: 'IN' },
+      { name: 'Netherlands', code: 'NL' },
+      { name: 'Ukraine', code: 'UA' },
+      { name: 'Vietnam', code: 'VN' },
+      { name: 'Korea, Republic of', code: 'KR' }
+    ];
+    
+    const attackTypes = [
+      'Brute Force', 
+      'SQL Injection', 
+      'XSS', 
+      'DDOS', 
+      'Port Scanning',
+      'Credential Stuffing'
+    ];
+    
+    // Generate 0-5 threat origins
+    const numOrigins = Math.floor(Math.random() * 6);
+    
+    // Clone countries array to avoid modifying the original
+    const availableCountries = [...countries];
+    
+    for (let i = 0; i < numOrigins && availableCountries.length > 0; i++) {
+      const randCountryIndex = Math.floor(Math.random() * availableCountries.length);
+      const country = availableCountries[randCountryIndex];
+      availableCountries.splice(randCountryIndex, 1); // Remove to avoid duplicates
+      
+      const attackType = attackTypes[Math.floor(Math.random() * attackTypes.length)];
+      const count = Math.floor(Math.random() * 100) + 1;
+      
+      // Random date in last week
+      const lastSeen = new Date();
+      lastSeen.setDate(lastSeen.getDate() - Math.floor(Math.random() * 7));
+      
+      origins.push({
+        country: country.name,
+        countryCode: country.code,
+        attackType,
+        count,
+        lastSeen
+      });
+    }
+    
+    // Sort by count (descending)
+    return origins.sort((a, b) => b.count - a.count);
+  };
+  
+  // Helper function to generate random CVE descriptions
+  const getRandomCveDescription = (component: string, severity: string): string => {
+    const vulnTypes = [
+      'buffer overflow',
+      'SQL injection',
+      'cross-site scripting (XSS)',
+      'remote code execution',
+      'privilege escalation',
+      'information disclosure',
+      'authentication bypass'
+    ];
+    
+    const vulnType = vulnTypes[Math.floor(Math.random() * vulnTypes.length)];
+    
+    const descriptions = [
+      `A ${severity} ${vulnType} vulnerability in ${component} allows attackers to compromise the system.`,
+      `${component} contains a ${severity} ${vulnType} vulnerability that can lead to system compromise.`,
+      `Improper input validation in ${component} leads to ${severity} ${vulnType} vulnerability.`,
+      `${component} fails to properly validate user input, resulting in ${severity} ${vulnType} vulnerability.`
+    ];
+    
+    return descriptions[Math.floor(Math.random() * descriptions.length)];
+  };
   
   // Run a single tool scan (simulation)
   const runToolScan = async (toolId: string, target: string): Promise<ScanResult> => {
@@ -546,6 +962,78 @@ export default function SecurityMonitor() {
     
     setTopVulnerabilities(criticalAndHighVulns.slice(0, 5));
     
+    // Generate additional analysis data (CVEs, Threat Intel, etc.)
+    const cves = generateCveEntries();
+    setCveEntries(cves);
+    
+    const threatIntel = generateThreatIntelligence();
+    setThreatIntelligence(threatIntel);
+    
+    const recommendations = generateSecurityRecommendations(stats, cves, threatIntel);
+    setSecurityRecommendations(recommendations);
+    
+    const timeline = generateTimelineData();
+    setTimelineEntries(timeline);
+    
+    const threatOrigins = generateThreatOrigins();
+    setThreatOrigins(threatOrigins);
+    
+    // Calculate security score (0-100)
+    let score = 100;
+    
+    // Deduct points for vulnerabilities
+    score -= stats.critical * 20;
+    score -= stats.high * 10;
+    score -= stats.medium * 5;
+    score -= stats.low * 2;
+    
+    // Deduct points for threat intelligence
+    if (threatIntel.isPhishing) score -= 20;
+    if (threatIntel.isMalware) score -= 20;
+    if (threatIntel.isBotnet) score -= 20;
+    if (threatIntel.isBlacklisted) score -= 15;
+    
+    // Deduct points for CVEs
+    cves.forEach(cve => {
+      if (cve.severity === 'critical') score -= 10;
+      else if (cve.severity === 'high') score -= 5;
+      else if (cve.severity === 'medium') score -= 3;
+      else score -= 1;
+    });
+    
+    // Ensure score is between 0-100
+    score = Math.max(0, Math.min(100, score));
+    setSecurityScore(score);
+    
+    // Create security history (last 7 days data)
+    const history = timeline.map(entry => ({
+      date: entry.date,
+      score: entry.score
+    }));
+    setSecurityHistory(history);
+    
+    // Set security overview
+    let status: "safe" | "warning" | "danger";
+    let statusText: string;
+    
+    if (score >= 80) {
+      status = "safe";
+      statusText = "AMAN";
+    } else if (score >= 50) {
+      status = "warning";
+      statusText = "WARNING";
+    } else {
+      status = "danger";
+      statusText = "BERBAHAYA";
+    }
+    
+    setSecurityOverview({
+      status,
+      score,
+      lastAnalyzed: new Date(),
+      statusText
+    });
+    
     // Generate conclusion
     let conclusionText = "";
     
@@ -560,13 +1048,13 @@ export default function SecurityMonitor() {
     }
     
     // Add specific recommendations
-    const recommendations = topVulnerabilities
+    const recommendationTexts = topVulnerabilities
       .filter(v => v.recommendation)
       .map(v => `• ${v.toolName}: ${v.recommendation}`)
       .join('\n');
     
-    if (recommendations) {
-      conclusionText += `\n\nKEY RECOMMENDATIONS:\n${recommendations}`;
+    if (recommendationTexts) {
+      conclusionText += `\n\nKEY RECOMMENDATIONS:\n${recommendationTexts}`;
     }
     
     setConclusion(conclusionText);
@@ -713,15 +1201,118 @@ export default function SecurityMonitor() {
           {scanResults.length > 0 && !isScanning && !isAnalyzing && (
             <>
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid grid-cols-3 mb-4">
+                <TabsList className="grid grid-cols-6 mb-4">
                   <TabsTrigger value="dashboard" className="font-tech">Dashboard</TabsTrigger>
                   <TabsTrigger value="vulnerabilities" className="font-tech">Vulnerabilities</TabsTrigger>
+                  <TabsTrigger value="threat-intel" className="font-tech">Threat Intel</TabsTrigger>
+                  <TabsTrigger value="recommendations" className="font-tech">Recommendations</TabsTrigger>
+                  <TabsTrigger value="visualizations" className="font-tech">Visualizations</TabsTrigger>
                   <TabsTrigger value="analysis" className="font-tech">Analysis</TabsTrigger>
                 </TabsList>
                 
                 {/* Dashboard Tab */}
                 <TabsContent value="dashboard" className="space-y-6">
-                  {/* Target Info */}
+                  {/* Security Overview Card - Big status card at the top */}
+                  {targetDetails && securityOverview && (
+                    <Card className={`p-4 mb-6 border-2 ${
+                      securityOverview.status === "safe" 
+                        ? "border-green-500/50 bg-green-500/5" 
+                        : securityOverview.status === "warning"
+                          ? "border-yellow-500/50 bg-yellow-500/5"
+                          : "border-red-500/50 bg-red-500/5"
+                    }`}>
+                      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                        <div className="lg:col-span-1 flex flex-col items-center justify-center">
+                          {securityOverview.status === "safe" ? (
+                            <CheckCircle className="h-16 w-16 text-green-500" />
+                          ) : securityOverview.status === "warning" ? (
+                            <AlertTriangle className="h-16 w-16 text-yellow-500" />
+                          ) : (
+                            <AlertCircle className="h-16 w-16 text-red-500" />
+                          )}
+                          <h3 className="text-2xl font-tech mt-2 text-center">
+                            {securityOverview.statusText}
+                          </h3>
+                        </div>
+                        
+                        <div className="lg:col-span-3 space-y-3">
+                          <div className="flex justify-between items-baseline">
+                            <h3 className="text-xl font-tech">
+                              Security Assessment Summary
+                            </h3>
+                            <div className="flex items-center space-x-3">
+                              <Clock className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm text-muted-foreground">
+                                Terakhir diperiksa: {securityOverview.lastAnalyzed.toLocaleDateString()} {securityOverview.lastAnalyzed.toLocaleTimeString()}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="text-lg font-medium">
+                            <span className="font-tech">{targetDetails.domain}</span> dinilai <span className={`font-tech ${
+                              securityOverview.status === "safe" 
+                                ? "text-green-500" 
+                                : securityOverview.status === "warning"
+                                  ? "text-yellow-500"
+                                  : "text-red-500"
+                            }`}>{securityOverview.statusText}</span> dengan skor <span className="font-tech">{securityOverview.score}</span> dari 100.
+                          </div>
+                          
+                          <div className="flex flex-col space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Security Score</span>
+                              <span>{securityOverview.score}/100</span>
+                            </div>
+                            <div className="h-2 w-full bg-background rounded overflow-hidden">
+                              <div 
+                                className={`h-full ${
+                                  securityOverview.status === "safe" 
+                                    ? "bg-green-500" 
+                                    : securityOverview.status === "warning"
+                                      ? "bg-yellow-500"
+                                      : "bg-red-500"
+                                }`} 
+                                style={{ width: `${securityOverview.score}%` }}
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-3 gap-2 text-sm mt-2">
+                            <div className="flex items-center space-x-2">
+                              <AlertCircle className="h-4 w-4 text-red-500" />
+                              <span>Critical: {vulnerabilityStats.critical}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                              <span>Medium: {vulnerabilityStats.medium}</span>
+                            </div>
+                            {cveEntries.length > 0 && (
+                              <div className="flex items-center space-x-2">
+                                <Bug className="h-4 w-4 text-purple-500" />
+                                <span>CVEs: {cveEntries.length}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center space-x-2">
+                              <AlertTriangle className="h-4 w-4 text-orange-500" />
+                              <span>High: {vulnerabilityStats.high}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Shield className="h-4 w-4 text-blue-500" />
+                              <span>Low: {vulnerabilityStats.low}</span>
+                            </div>
+                            {threatIntelligence?.isBlacklisted && (
+                              <div className="flex items-center space-x-2">
+                                <AlertCircle className="h-4 w-4 text-red-500" />
+                                <span>Blacklisted</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  )}
+                  
+                  {/* Target Info & Summary Cards */}
                   {targetDetails && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <Card className="p-4 bg-card/80 border-secondary/30">
@@ -738,67 +1329,64 @@ export default function SecurityMonitor() {
                       
                       <Card className="p-4 bg-card/80 border-secondary/30">
                         <div className="flex items-center space-x-2">
-                          <Shield className="h-5 w-5 text-secondary" />
-                          <h3 className="font-tech text-secondary">Security Score</h3>
+                          <Network className="h-5 w-5 text-secondary" />
+                          <h3 className="font-tech text-secondary">Network Overview</h3>
                         </div>
-                        <div className="mt-2 space-y-1">
-                          {vulnerabilityStats && (
-                            <div className="flex justify-center">
-                              <div className="text-4xl font-bold relative">
-                                {(() => {
-                                  if (vulnerabilityStats.critical > 0) return 'F';
-                                  if (vulnerabilityStats.high > 2) return 'D';
-                                  if (vulnerabilityStats.high > 0) return 'C';
-                                  if (vulnerabilityStats.medium > 2) return 'B';
-                                  return 'A';
-                                })()}
-                                <span className="absolute text-sm top-0 right-0 transform translate-x-full -translate-y-1/4">
-                                  {vulnerabilityStats.critical === 0 && vulnerabilityStats.high === 0 ? '+' : ''}
-                                </span>
-                              </div>
-                            </div>
-                          )}
-                          <p className="text-center text-sm text-muted-foreground mt-2">
-                            {vulnerabilityStats.critical > 0 
-                              ? 'Critical vulnerabilities found' 
-                              : vulnerabilityStats.high > 0 
-                                ? 'Significant security issues' 
-                                : 'Good security posture'}
-                          </p>
+                        <div className="mt-2 space-y-1 text-sm">
+                          {(() => {
+                            const portResult = scanResults.find(r => r.toolName === "Port Scanner");
+                            const openPorts = portResult?.details?.openPorts || [];
+                            const sslResult = scanResults.find(r => r.toolName === "SSL Scanner");
+                            const sslRating = sslResult?.summary?.split(": ")[1] || "Unknown";
+                            
+                            return (
+                              <>
+                                <div className="flex justify-between">
+                                  <span>Open Ports:</span>
+                                  <span className="font-mono">{openPorts.length}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>SSL Rating:</span>
+                                  <span className="font-mono">{sslRating}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Firewall Detected:</span>
+                                  <span className="font-mono">{Math.random() > 0.5 ? "Yes" : "No"}</span>
+                                </div>
+                              </>
+                            );
+                          })()}
                         </div>
                       </Card>
                       
                       <Card className="p-4 bg-card/80 border-secondary/30">
                         <div className="flex items-center space-x-2">
-                          <Layers className="h-5 w-5 text-secondary" />
-                          <h3 className="font-tech text-secondary">Summary</h3>
+                          <Database className="h-5 w-5 text-secondary" />
+                          <h3 className="font-tech text-secondary">Tech Stack</h3>
                         </div>
                         <div className="mt-2 space-y-1 text-sm">
-                          <div className="grid grid-cols-2 gap-1">
-                            <div className="flex items-center space-x-1 text-red-500">
-                              <AlertCircle className="h-3 w-3" />
-                              <span>Critical:</span>
-                              <span className="font-bold">{vulnerabilityStats.critical}</span>
-                            </div>
-                            <div className="flex items-center space-x-1 text-orange-500">
-                              <AlertCircle className="h-3 w-3" />
-                              <span>High:</span>
-                              <span className="font-bold">{vulnerabilityStats.high}</span>
-                            </div>
-                            <div className="flex items-center space-x-1 text-yellow-500">
-                              <AlertCircle className="h-3 w-3" />
-                              <span>Medium:</span>
-                              <span className="font-bold">{vulnerabilityStats.medium}</span>
-                            </div>
-                            <div className="flex items-center space-x-1 text-blue-500">
-                              <Shield className="h-3 w-3" />
-                              <span>Low:</span>
-                              <span className="font-bold">{vulnerabilityStats.low}</span>
-                            </div>
-                          </div>
-                          <p className="text-muted-foreground mt-1">
-                            Total issues: {vulnerabilityStats.critical + vulnerabilityStats.high + vulnerabilityStats.medium + vulnerabilityStats.low}
-                          </p>
+                          {(() => {
+                            const techResult = scanResults.find(r => r.toolName === "Tech Detector");
+                            const technologies = techResult?.details?.technologies || [];
+                            const detectedCMS = technologies.find(t => ["WordPress", "Joomla", "Drupal"].includes(t));
+                            
+                            return (
+                              <>
+                                <div className="flex justify-between">
+                                  <span>CMS:</span>
+                                  <span className="font-mono">{detectedCMS || "None detected"}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Server:</span>
+                                  <span className="font-mono">{techResult?.details?.serverInfo?.server || "Unknown"}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Language:</span>
+                                  <span className="font-mono">{techResult?.details?.serverInfo?.language || "Unknown"}</span>
+                                </div>
+                              </>
+                            );
+                          })()}
                         </div>
                       </Card>
                     </div>
@@ -867,10 +1455,228 @@ export default function SecurityMonitor() {
                 {/* Vulnerabilities Tab */}
                 <TabsContent value="vulnerabilities" className="space-y-6">
                   <Card className="p-4 bg-card/80 border-secondary/30">
-                    <h3 className="font-tech text-secondary mb-4">Vulnerability Summary</h3>
+                    <h3 className="font-tech text-secondary mb-4">🔍 Vulnerability Scan</h3>
                     
-                    <div className="space-y-4">
-                      {['critical', 'high', 'medium', 'low', 'info'].map((level) => {
+                    {/* Port Information */}
+                    <div className="mb-6">
+                      <h4 className="text-primary text-sm font-tech mb-2 flex items-center">
+                        <Server className="w-4 h-4 mr-2" />
+                        Port Scan Results
+                      </h4>
+                      
+                      {(() => {
+                        const portResult = scanResults.find(r => r.toolName === "Port Scanner");
+                        if (!portResult || portResult.status !== "success") {
+                          return <p className="text-sm text-muted-foreground">No port information available</p>;
+                        }
+                        
+                        const openPorts = portResult.details.openPorts || [];
+                        const commonServices: Record<number, string> = {
+                          21: "FTP",
+                          22: "SSH",
+                          23: "Telnet",
+                          25: "SMTP",
+                          53: "DNS",
+                          80: "HTTP",
+                          110: "POP3",
+                          143: "IMAP",
+                          443: "HTTPS",
+                          3306: "MySQL",
+                          3389: "RDP",
+                          5432: "PostgreSQL",
+                          8080: "HTTP-Alt"
+                        };
+                        
+                        return (
+                          <>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">
+                              {openPorts.map((port: number) => (
+                                <div key={port} className="flex justify-between items-center bg-green-500/10 text-sm p-2 rounded">
+                                  <span className="font-mono font-bold">{port}</span>
+                                  <span className="text-xs text-muted-foreground">{commonServices[port] || "Unknown"}</span>
+                                </div>
+                              ))}
+                            </div>
+                            
+                            {openPorts.length === 0 && (
+                              <p className="text-sm text-muted-foreground">No open ports detected</p>
+                            )}
+                            
+                            {openPorts.length > 0 && openPorts.some(p => [21, 23, 3306, 5432].includes(p)) && (
+                              <div className="mt-2 text-xs bg-yellow-500/10 p-2 rounded-md border border-yellow-500/30">
+                                <AlertTriangle className="h-3 w-3 text-yellow-500 inline mr-1" />
+                                <span className="text-yellow-500 font-semibold">Security Warning:</span> Some potentially risky ports are open (FTP, Telnet, or database ports).
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                    
+                    {/* SSL/TLS Information */}
+                    <div className="mb-6">
+                      <h4 className="text-primary text-sm font-tech mb-2 flex items-center">
+                        <Lock className="w-4 h-4 mr-2" />
+                        SSL/TLS Configuration
+                      </h4>
+                      
+                      {(() => {
+                        const sslResult = scanResults.find(r => r.toolName === "SSL Scanner");
+                        if (!sslResult || sslResult.status !== "success") {
+                          return <p className="text-sm text-muted-foreground">No SSL information available</p>;
+                        }
+                        
+                        const sslRating = sslResult.summary?.split(": ")[1] || "Unknown";
+                        const cert = sslResult.details?.certificate || {};
+                        const protocols = sslResult.details?.protocols || [];
+                        const vulnerabilities = sslResult.details?.vulnerabilities || [];
+                        
+                        return (
+                          <div className="space-y-2">
+                            <div className="flex items-center">
+                              <div className={`text-xl font-bold px-3 py-1 rounded ${
+                                sslRating === "A+" ? "bg-green-500/20 text-green-500" :
+                                sslRating === "A" ? "bg-green-400/20 text-green-500" :
+                                sslRating === "B" ? "bg-yellow-500/20 text-yellow-500" :
+                                "bg-red-500/20 text-red-500"
+                              }`}>
+                                {sslRating}
+                              </div>
+                              <span className="ml-2 text-sm">SSL Rating</span>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div>
+                                <p className="text-xs text-muted-foreground">Certificate Issuer</p>
+                                <p>{cert.issuer || "Unknown"}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground">Valid Until</p>
+                                <p>{cert.validUntil ? new Date(cert.validUntil).toLocaleDateString() : "Unknown"}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground">Key Strength</p>
+                                <p>{cert.bits ? `${cert.bits} bits` : "Unknown"}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground">Protocols</p>
+                                <p>{protocols.join(", ") || "Unknown"}</p>
+                              </div>
+                            </div>
+                            
+                            {vulnerabilities.length > 0 && (
+                              <div className="mt-2 text-xs bg-yellow-500/10 p-2 rounded-md border border-yellow-500/30">
+                                <AlertTriangle className="h-3 w-3 text-yellow-500 inline mr-1" />
+                                <span className="text-yellow-500 font-semibold">SSL Vulnerabilities Detected:</span> {vulnerabilities.join(", ")}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                    
+                    {/* CMS Detection */}
+                    <div className="mb-6">
+                      <h4 className="text-primary text-sm font-tech mb-2 flex items-center">
+                        <Database className="w-4 h-4 mr-2" />
+                        CMS & Plugin Detection
+                      </h4>
+                      
+                      {(() => {
+                        const techResult = scanResults.find(r => r.toolName === "Tech Detector");
+                        if (!techResult || techResult.status !== "success") {
+                          return <p className="text-sm text-muted-foreground">No CMS information available</p>;
+                        }
+                        
+                        const technologies = techResult.details?.technologies || [];
+                        const detectedCMS = technologies.find(t => ["WordPress", "Joomla", "Drupal"].includes(t));
+                        
+                        if (!detectedCMS) {
+                          return <p className="text-sm text-muted-foreground">No CMS detected</p>;
+                        }
+                        
+                        // Simulate some plugin detection for WordPress
+                        const wpPlugins = detectedCMS === "WordPress" ? [
+                          { name: "Contact Form 7", version: "5.5.3", vulnerable: false },
+                          { name: "Yoast SEO", version: "17.8", vulnerable: false },
+                          { name: "WooCommerce", version: "6.3.1", vulnerable: Math.random() > 0.7 }
+                        ] : [];
+                        
+                        return (
+                          <div className="space-y-2">
+                            <div className="flex items-center">
+                              <span className="font-semibold">{detectedCMS}</span>
+                              <span className="ml-2 text-xs text-muted-foreground">
+                                Version: {Math.floor(Math.random() * 3) + 3}.{Math.floor(Math.random() * 9)}.{Math.floor(Math.random() * 9)}
+                              </span>
+                            </div>
+                            
+                            {wpPlugins.length > 0 && (
+                              <div>
+                                <p className="text-xs text-muted-foreground mt-2 mb-1">Detected Plugins:</p>
+                                <div className="space-y-1">
+                                  {wpPlugins.map((plugin, idx) => (
+                                    <div key={idx} className="flex justify-between text-xs p-1 bg-background/50 rounded">
+                                      <span>{plugin.name} (v{plugin.version})</span>
+                                      {plugin.vulnerable ? (
+                                        <span className="text-red-500 flex items-center">
+                                          <AlertCircle className="h-3 w-3 mr-1" />
+                                          Vulnerable
+                                        </span>
+                                      ) : (
+                                        <span className="text-green-500 flex items-center">
+                                          <CheckCircle className="h-3 w-3 mr-1" />
+                                          Up to date
+                                        </span>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                    
+                    {/* CVE Vulnerabilities */}
+                    <div className="mb-4">
+                      <h4 className="text-primary text-sm font-tech mb-2 flex items-center">
+                        <Bug className="w-4 h-4 mr-2" />
+                        CVE Vulnerabilities
+                      </h4>
+                      
+                      {cveEntries.length > 0 ? (
+                        <div className="space-y-2">
+                          {cveEntries.map(cve => (
+                            <div key={cve.id} className={`p-2 text-sm border rounded-md ${
+                              cve.severity === "critical" ? "bg-red-500/10 border-red-500/30" :
+                              cve.severity === "high" ? "bg-orange-500/10 border-orange-500/30" :
+                              cve.severity === "medium" ? "bg-yellow-500/10 border-yellow-500/30" :
+                              "bg-blue-500/10 border-blue-500/30"
+                            }`}>
+                              <div className="flex justify-between">
+                                <span className="font-mono font-bold">{cve.id}</span>
+                                <span className="capitalize">{cve.severity}</span>
+                              </div>
+                              <p className="text-xs mt-1">{cve.description}</p>
+                              <div className="flex justify-between mt-1 text-xs text-muted-foreground">
+                                <span>Affects: {cve.affectedComponent}</span>
+                                <span>Fix Available: {cve.fixAvailable ? "Yes" : "No"}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No CVE vulnerabilities detected</p>
+                      )}
+                    </div>
+                    
+                    {/* General Vulnerabilities Summary */}
+                    <div className="space-y-4 mt-6">
+                      <h4 className="text-primary text-sm font-tech mb-2">Other Vulnerabilities by Severity</h4>
+                      
+                      {['critical', 'high', 'medium', 'low'].map((level) => {
                         const levelResults = scanResults.filter(r => r.riskLevel === level);
                         if (levelResults.length === 0) return null;
                         
@@ -903,6 +1709,182 @@ export default function SecurityMonitor() {
                         );
                       })}
                     </div>
+                  </Card>
+                </TabsContent>
+                
+                {/* Threat Intelligence Tab */}
+                <TabsContent value="threat-intel" className="space-y-6">
+                  <Card className="p-4 bg-card/80 border-secondary/30">
+                    <h3 className="font-tech text-secondary mb-4">🧬 Threat Intelligence</h3>
+                    
+                    {threatIntelligence && (
+                      <div className="space-y-6">
+                        {/* Threat Summary */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                          <Card className={`p-3 ${threatIntelligence.isPhishing ? 'bg-red-500/10 border-red-500/30' : 'bg-green-500/10 border-green-500/30'}`}>
+                            <div className="flex flex-col items-center justify-center h-full py-2">
+                              <div className="mb-2">
+                                {threatIntelligence.isPhishing ? 
+                                  <AlertCircle className="h-8 w-8 text-red-500" /> : 
+                                  <CheckCircle className="h-8 w-8 text-green-500" />
+                                }
+                              </div>
+                              <h4 className="font-tech text-center">Phishing Status</h4>
+                              <p className="text-sm mt-1 text-center">{threatIntelligence.isPhishing ? 'Suspected Phishing' : 'No Phishing Detected'}</p>
+                            </div>
+                          </Card>
+                          
+                          <Card className={`p-3 ${threatIntelligence.isMalware ? 'bg-red-500/10 border-red-500/30' : 'bg-green-500/10 border-green-500/30'}`}>
+                            <div className="flex flex-col items-center justify-center h-full py-2">
+                              <div className="mb-2">
+                                {threatIntelligence.isMalware ? 
+                                  <AlertCircle className="h-8 w-8 text-red-500" /> : 
+                                  <CheckCircle className="h-8 w-8 text-green-500" />
+                                }
+                              </div>
+                              <h4 className="font-tech text-center">Malware Status</h4>
+                              <p className="text-sm mt-1 text-center">{threatIntelligence.isMalware ? 'Suspected Malware' : 'No Malware Detected'}</p>
+                            </div>
+                          </Card>
+                          
+                          <Card className={`p-3 ${threatIntelligence.isBotnet ? 'bg-red-500/10 border-red-500/30' : 'bg-green-500/10 border-green-500/30'}`}>
+                            <div className="flex flex-col items-center justify-center h-full py-2">
+                              <div className="mb-2">
+                                {threatIntelligence.isBotnet ? 
+                                  <AlertCircle className="h-8 w-8 text-red-500" /> : 
+                                  <CheckCircle className="h-8 w-8 text-green-500" />
+                                }
+                              </div>
+                              <h4 className="font-tech text-center">Botnet Status</h4>
+                              <p className="text-sm mt-1 text-center">{threatIntelligence.isBotnet ? 'Botnet C2 Detected' : 'No Botnet Activity'}</p>
+                            </div>
+                          </Card>
+                          
+                          <Card className={`p-3 ${threatIntelligence.isBlacklisted ? 'bg-red-500/10 border-red-500/30' : 'bg-green-500/10 border-green-500/30'}`}>
+                            <div className="flex flex-col items-center justify-center h-full py-2">
+                              <div className="mb-2">
+                                {threatIntelligence.isBlacklisted ? 
+                                  <AlertCircle className="h-8 w-8 text-red-500" /> : 
+                                  <CheckCircle className="h-8 w-8 text-green-500" />
+                                }
+                              </div>
+                              <h4 className="font-tech text-center">Blacklist Status</h4>
+                              <p className="text-sm mt-1 text-center">
+                                {threatIntelligence.isBlacklisted 
+                                  ? `Blacklisted (${threatIntelligence.blacklistSources.length} sources)` 
+                                  : 'Not Blacklisted'}
+                              </p>
+                            </div>
+                          </Card>
+                        </div>
+                        
+                        {/* Risk Score Card */}
+                        <Card className="p-4 bg-card border-primary/20">
+                          <div className="flex justify-between items-center mb-4">
+                            <h4 className="font-tech text-primary flex items-center">
+                              <Activity className="h-5 w-5 mr-2" />
+                              Threat Risk Score
+                            </h4>
+                            <div className={`text-lg font-bold px-3 py-1 rounded-full ${
+                              threatIntelligence.riskScore < 20 ? "bg-green-500/20 text-green-500" :
+                              threatIntelligence.riskScore < 50 ? "bg-yellow-500/20 text-yellow-500" :
+                              "bg-red-500/20 text-red-500"
+                            }`}>
+                              {threatIntelligence.riskScore}/100
+                            </div>
+                          </div>
+                          
+                          <div className="w-full bg-background h-3 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full ${
+                                threatIntelligence.riskScore < 20 ? "bg-green-500" :
+                                threatIntelligence.riskScore < 50 ? "bg-yellow-500" :
+                                "bg-red-500"
+                              }`} 
+                              style={{ width: `${threatIntelligence.riskScore}%` }}
+                            />
+                          </div>
+                          
+                          <p className="text-sm mt-4 text-muted-foreground">
+                            {threatIntelligence.riskScore < 20 
+                              ? "Low threat risk. The domain appears to be safe and has no significant threat indicators."
+                              : threatIntelligence.riskScore < 50
+                                ? "Moderate threat risk. The domain has some suspicious indicators but no definitive malicious activity."
+                                : "High threat risk. The domain shows strong indicators of malicious activity and should be approached with caution."}
+                          </p>
+                        </Card>
+                        
+                        {/* Blacklist Details */}
+                        {threatIntelligence.isBlacklisted && (
+                          <Card className="p-4 bg-card border-destructive/20">
+                            <h4 className="font-tech text-destructive mb-4 flex items-center">
+                              <Eye className="h-5 w-5 mr-2" />
+                              Blacklist Details
+                            </h4>
+                            
+                            <div className="space-y-3">
+                              <div>
+                                <p className="text-sm text-muted-foreground mb-2">Blacklisted on the following services:</p>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                  {threatIntelligence.blacklistSources.map((source, idx) => (
+                                    <div key={idx} className="bg-destructive/10 text-destructive text-sm py-1 px-3 rounded text-center">
+                                      {source}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                              
+                              {threatIntelligence.abuseReports > 0 && (
+                                <div>
+                                  <p className="text-sm text-muted-foreground mb-2">Abuse Reports: {threatIntelligence.abuseReports}</p>
+                                  {threatIntelligence.lastReportDate && (
+                                    <p className="text-xs text-muted-foreground">
+                                      Last reported: {threatIntelligence.lastReportDate.toLocaleDateString()}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </Card>
+                        )}
+                        
+                        {/* Threat Origins Map */}
+                        {threatOrigins.length > 0 && (
+                          <Card className="p-4 bg-card border-secondary/20">
+                            <h4 className="font-tech text-secondary mb-4 flex items-center">
+                              <Map className="h-5 w-5 mr-2" />
+                              Threat Origins
+                            </h4>
+                            
+                            <div className="space-y-3">
+                              <div className="h-48 bg-background/80 border border-secondary/20 rounded-md relative mb-4">
+                                <div className="p-4 text-xs text-center text-muted-foreground absolute inset-0 flex items-center justify-center">
+                                  [Threat Map Visualization - In a real implementation, this would be an interactive map showing attack origins]
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <p className="text-sm text-muted-foreground mb-2">Top attack sources:</p>
+                                <div className="space-y-2">
+                                  {threatOrigins.map((origin, idx) => (
+                                    <div key={idx} className="flex justify-between text-sm p-2 bg-background/60 rounded">
+                                      <div>
+                                        <span className="font-semibold">{origin.country}</span>
+                                        <span className="text-xs ml-2 text-muted-foreground">({origin.countryCode})</span>
+                                      </div>
+                                      <div className="text-xs flex items-center">
+                                        <span className="text-muted-foreground mr-2">{origin.attackType}</span>
+                                        <span className="font-mono bg-primary/10 px-2 py-0.5 rounded">{origin.count}</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        )}
+                      </div>
+                    )}
                   </Card>
                 </TabsContent>
                 
