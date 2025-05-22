@@ -7,7 +7,7 @@ export default function About() {
       <div className="max-w-4xl mx-auto">
         <div className="relative mb-10 p-8 rounded-lg overflow-hidden">
           <MatrixBackground />
-          <h1 className="text-4xl font-tech mb-4 text-center text-primary">About CyberPulse</h1>
+          <h1 className="text-4xl font-tech mb-4 text-center text-primary">About Security Operation Center</h1>
           <p className="text-center font-mono text-muted-foreground">
             An open-source cybersecurity toolkit designed for educational purposes
           </p>
@@ -17,7 +17,7 @@ export default function About() {
           <CardContent className="p-6">
             <h2 className="text-2xl font-tech mb-4 text-primary">Our Mission</h2>
             <p className="mb-4 font-mono text-muted-foreground">
-              CyberPulse was created to provide cybersecurity professionals, students, and enthusiasts 
+              Security Operation Center was created to provide cybersecurity professionals, students, and enthusiasts 
               with a comprehensive set of web-based tools for security testing and education. We believe 
               that knowledge about security vulnerabilities helps build more secure systems.
             </p>
@@ -32,7 +32,7 @@ export default function About() {
           <CardContent className="p-6">
             <h2 className="text-2xl font-tech mb-4 text-secondary">Ethical Use</h2>
             <p className="mb-4 font-mono text-muted-foreground">
-              All tools provided by CyberPulse are meant to be used ethically and legally. Always ensure you have 
+              All tools provided by Security Operation Center are meant to be used ethically and legally. Always ensure you have 
               proper authorization before scanning or testing any system, network, or website. Unauthorized 
               security testing may be illegal in your jurisdiction.
             </p>
@@ -52,7 +52,7 @@ export default function About() {
           <CardContent className="p-6">
             <h2 className="text-2xl font-tech mb-4 text-primary">Technology</h2>
             <p className="mb-4 font-mono text-muted-foreground">
-              CyberPulse is built using modern web technologies to provide a responsive, 
+              Security Operation Center is built using modern web technologies to provide a responsive, 
               browser-based experience. Our tech stack includes:
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -96,7 +96,7 @@ export default function About() {
               <div className="p-3 border border-secondary/20 rounded bg-card/50">
                 <h3 className="text-lg font-tech mb-2 text-secondary">Email</h3>
                 <p className="font-mono text-sm text-muted-foreground">
-                  For private inquiries: contact@cyberpulse-example.com
+                  For private inquiries: contact@securityoperation-example.com
                 </p>
               </div>
             </div>

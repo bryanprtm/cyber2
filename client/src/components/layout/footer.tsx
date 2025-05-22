@@ -44,7 +44,7 @@ export default function Footer() {
         </div>
         <div className="mt-6 text-center">
           <p className="text-xs font-mono text-muted-foreground">
-            © {new Date().getFullYear()} CyberPulse. Created for educational purposes only. Always use responsibly.
+            © {new Date().getFullYear()} Security Operation Center. Created for educational purposes only. Always use responsibly.
           </p>
         </div>
       </div>
