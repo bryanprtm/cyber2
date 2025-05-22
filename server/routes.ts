@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupWebSocketServer } from "./tools/wsServer";
-import { handlePortScan, getScanHistory } from "./controllers/scanController";
+import { handlePortScan, handlePingSweep, getScanHistory } from "./controllers/scanController";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API Routes - all prefixed with /api
@@ -73,6 +73,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Port Scanner API - Using controller with database integration
   app.post("/api/scan/port", handlePortScan);
+  
+  // Ping Sweep API - Using controller with database integration
+  app.post("/api/scan/ping-sweep", handlePingSweep);
   
   // Get scan history for a user
   app.get("/api/scan/history/:userId", getScanHistory);

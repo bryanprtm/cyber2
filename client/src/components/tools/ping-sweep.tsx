@@ -91,6 +91,21 @@ export default function PingSweep({ onScanComplete }: PingSweepProps) {
   const { addSystemLine, addInfoLine, addErrorLine, addCommandLine, addLine } = useTerminal();
   const { toast } = useToast();
   
+  // Helper function to format seconds into human readable time
+  const formatTimeSeconds = (seconds: number): string => {
+    if (seconds < 60) {
+      return `${Math.round(seconds)}s`;
+    } else if (seconds < 3600) {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = Math.round(seconds % 60);
+      return `${minutes}m ${remainingSeconds}s`;
+    } else {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      return `${hours}h ${minutes}m`;
+    }
+  };
+  
   // Update scan statistics and timer
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -234,8 +249,8 @@ export default function PingSweep({ onScanComplete }: PingSweepProps) {
         const etaSeconds = rate > 0 ? remainingHosts / rate : 0;
         
         // Format times for display
-        const elapsedTime = formatTime(elapsedSeconds);
-        const eta = formatTime(etaSeconds);
+        const elapsedTime = formatTimeSeconds(elapsedSeconds);
+        const eta = formatTimeSeconds(etaSeconds);
         
         setScanStats(prev => ({
           ...prev,
