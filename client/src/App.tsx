@@ -12,6 +12,7 @@ import PortScannerPage from "@/pages/tool-detail/port-scanner";
 import HashGeneratorPage from "@/pages/tool-detail/hash-generator";
 import PasswordGeneratorPage from "@/pages/tool-detail/password-generator";
 import SqlInjectorPage from "@/pages/tool-detail/sql-injector";
+import HashCrackerPage from "@/pages/tool-detail/hash-cracker";
 import ZapScannerPage from "@/pages/tool-detail/zap-scanner";
 import XssDetectorPage from "@/pages/tool-detail/xss-detector";
 import DirectoryScannerPage from "@/pages/tool-detail/directory-scanner";
@@ -53,6 +54,7 @@ function Router() {
           <Route path="/about" component={About} />
           <Route path="/tools/port-scanner" component={PortScannerPage} />
           <Route path="/tools/hash-generator" component={HashGeneratorPage} />
+          <Route path="/tools/hash-cracker" component={HashCrackerPage} />
           <Route path="/tools/password-generator" component={PasswordGeneratorPage} />
           <Route path="/tools/zap-scanner" component={ZapScannerPage} />
           <Route path="/tools/xss-detector" component={XssDetectorPage} />

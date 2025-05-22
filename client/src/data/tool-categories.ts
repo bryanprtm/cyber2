@@ -203,7 +203,7 @@ export const tools: Tool[] = [
   {
     id: "hash-cracker",
     name: "Hash Cracker",
-    description: "Attempt to crack password hashes using dictionaries.",
+    description: "Crack password hashes using dictionary, brute force, and rainbow table methods.",
     category: "password",
     categoryLabel: "Crypto"
   },
