@@ -1,26 +1,21 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 export interface WebSocketMessage {
   type: string;
   data: any;
 }
 
-export function useWebSocket() {
+export const useWebSocket = (autoConnect: boolean = true) => {
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<number | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Connect to the WebSocket server
   const connect = useCallback(() => {
-    // Close existing socket if any
-    if (socketRef.current) {
-      socketRef.current.close();
-    }
-
-    // Clear any pending reconnection
+    // Clear any existing reconnect timeout
     if (reconnectTimeoutRef.current) {
-      window.clearTimeout(reconnectTimeoutRef.current);
+      clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
 
@@ -33,19 +28,19 @@ export function useWebSocket() {
       const socket = new WebSocket(wsUrl);
       socketRef.current = socket;
 
-      // Set up event handlers
+      // Socket event handlers
       socket.onopen = () => {
-        console.log('WebSocket connection established');
+        console.log('WebSocket connected');
         setIsConnected(true);
       };
 
       socket.onclose = (event) => {
-        console.log(`WebSocket connection closed: ${event.code} - ${event.reason}`);
+        console.log(`WebSocket closed: ${event.code} ${event.reason}`);
         setIsConnected(false);
-
+        
         // Attempt to reconnect after a delay
-        reconnectTimeoutRef.current = window.setTimeout(() => {
-          console.log('Attempting to reconnect to WebSocket...');
+        reconnectTimeoutRef.current = setTimeout(() => {
+          console.log('Attempting to reconnect WebSocket...');
           connect();
         }, 3000);
       };
@@ -56,27 +51,33 @@ export function useWebSocket() {
 
       socket.onmessage = (event) => {
         try {
-          const data = JSON.parse(event.data);
-          setLastMessage(data);
+          const message = JSON.parse(event.data);
+          setLastMessage(message);
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);
         }
       };
     } catch (error) {
-      console.error('Error creating WebSocket connection:', error);
+      console.error('Error connecting to WebSocket:', error);
+      
+      // Attempt to reconnect after a delay
+      reconnectTimeoutRef.current = setTimeout(() => {
+        console.log('Attempting to reconnect WebSocket...');
+        connect();
+      }, 3000);
     }
   }, []);
 
-  // Send a message to the WebSocket server
+  // Send a message through the WebSocket
   const sendMessage = useCallback((type: string, data: any): boolean => {
     if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
-      console.error('Cannot send message: WebSocket is not connected');
+      console.error('WebSocket is not connected');
       return false;
     }
 
     try {
-      const message: WebSocketMessage = { type, data };
-      socketRef.current.send(JSON.stringify(message));
+      const message = JSON.stringify({ type, data });
+      socketRef.current.send(message);
       return true;
     } catch (error) {
       console.error('Error sending WebSocket message:', error);
@@ -84,26 +85,23 @@ export function useWebSocket() {
     }
   }, []);
 
-  // Connect when the component mounts
+  // Connect on component mount if autoConnect is true
   useEffect(() => {
-    connect();
+    if (autoConnect) {
+      connect();
+    }
 
-    // Clean up when the component unmounts
+    // Cleanup on unmount
     return () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      
       if (socketRef.current) {
         socketRef.current.close();
       }
-
-      if (reconnectTimeoutRef.current) {
-        window.clearTimeout(reconnectTimeoutRef.current);
-      }
     };
-  }, [connect]);
+  }, [autoConnect, connect]);
 
-  return {
-    isConnected,
-    lastMessage,
-    sendMessage,
-    connect,
-  };
-}
+  return { isConnected, lastMessage, sendMessage, connect };
+};

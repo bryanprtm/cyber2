@@ -111,25 +111,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
   
-  // WHOIS Lookup API
-  app.post("/api/lookup/whois", (req, res) => {
-    const { domain } = req.body;
-    
-    if (!domain) {
-      return res.status(400).json({ success: false, message: "Domain is required" });
-    }
-    
-    res.json({
-      success: true,
-      results: {
-        domain,
-        registrar: "Example Registrar, LLC",
-        registeredOn: "2005-08-03",
-        expiresOn: "2023-08-03",
-        nameServers: ["ns1.example.com", "ns2.example.com"]
-      }
-    });
-  });
+  // Note: WHOIS Lookup API is now handled by the controller at line 82
   
   // DNS Lookup API
   app.post("/api/lookup/dns", (req, res) => {

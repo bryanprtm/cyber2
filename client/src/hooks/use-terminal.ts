@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface TerminalLine {
   id: string;
@@ -7,42 +8,63 @@ export interface TerminalLine {
   timestamp: Date;
 }
 
-export function useTerminal() {
+export function useTerminal(maxLines: number = 100) {
   const [lines, setLines] = useState<TerminalLine[]>([]);
 
-  // Add a line to the terminal
-  const addLine = useCallback((content: string, type: TerminalLine['type']) => {
+  const addLine = useCallback((type: TerminalLine['type'], content: string) => {
     const line: TerminalLine = {
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: uuidv4(),
       type,
       content,
-      timestamp: new Date(),
+      timestamp: new Date()
     };
-    
-    setLines((prevLines) => [...prevLines, line]);
-    return line.id;
-  }, []);
 
-  // Clear all lines from the terminal
-  const clearTerminal = useCallback(() => {
+    setLines(prevLines => {
+      const newLines = [...prevLines, line];
+      // Keep only the last maxLines
+      return newLines.slice(-maxLines);
+    });
+
+    return line.id;
+  }, [maxLines]);
+
+  const addCommandLine = useCallback((content: string) => {
+    return addLine('command', content);
+  }, [addLine]);
+
+  const addSuccessLine = useCallback((content: string) => {
+    return addLine('success', content);
+  }, [addLine]);
+
+  const addErrorLine = useCallback((content: string) => {
+    return addLine('error', content);
+  }, [addLine]);
+
+  const addInfoLine = useCallback((content: string) => {
+    return addLine('info', content);
+  }, [addLine]);
+
+  const addSystemLine = useCallback((content: string) => {
+    return addLine('system', content);
+  }, [addLine]);
+
+  const clearLines = useCallback(() => {
     setLines([]);
   }, []);
 
-  // Shorthand methods for different line types
-  const addCommandLine = useCallback((content: string) => addLine(content, 'command'), [addLine]);
-  const addSuccessLine = useCallback((content: string) => addLine(content, 'success'), [addLine]);
-  const addErrorLine = useCallback((content: string) => addLine(content, 'error'), [addLine]);
-  const addInfoLine = useCallback((content: string) => addLine(content, 'info'), [addLine]);
-  const addSystemLine = useCallback((content: string) => addLine(content, 'system'), [addLine]);
+  const removeLine = useCallback((id: string) => {
+    setLines(prevLines => prevLines.filter(line => line.id !== id));
+  }, []);
 
   return {
     lines,
     addLine,
-    clearTerminal,
     addCommandLine,
     addSuccessLine,
     addErrorLine,
     addInfoLine,
     addSystemLine,
+    clearLines,
+    removeLine
   };
 }
