@@ -702,7 +702,7 @@ export default function PingSweep({ onScanComplete }: PingSweepProps) {
         </div>
       </Card>
       
-      {/* Scan Progress Section */}
+      {/* Scan Progress Section - Always visible during scanning */}
       {isScanning && (
         <Card className="p-4 border-primary/30 bg-card relative">
           {/* Animated scanning pulse overlay */}
