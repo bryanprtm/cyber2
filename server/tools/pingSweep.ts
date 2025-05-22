@@ -3,6 +3,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { hostname } from 'os';
 import dns from 'dns';
+import ping from 'ping';
 
 const execPromise = promisify(exec);
 const dnsLookupPromise = promisify(dns.lookup);
@@ -123,30 +124,38 @@ export class PingSweepScanner extends EventEmitter {
   }
   
   /**
-   * Ping a single host and get status
+   * Ping a single host and get status using the ping package
    */
   private async pingHost(ip: string): Promise<PingSweepResult> {
     if (this.isStopped) {
       return { ip, status: 'dead' };
     }
     
-    // Use system ping command
-    // Adjust based on OS
-    const pingCount = this.retries > 1 ? this.retries : 1;
-    const isWindows = process.platform === 'win32';
-    const pingCommand = isWindows
-      ? `ping -n ${pingCount} -w ${this.timeout} ${ip}`
-      : `ping -c ${pingCount} -W ${Math.ceil(this.timeout / 1000)} ${ip}`;
-    
     try {
-      const startTime = Date.now();
-      const { stdout } = await execPromise(pingCommand);
-      const endTime = Date.now();
+      // Use the ping package which provides better cross-platform support
+      const pingConfig = {
+        timeout: this.timeout / 1000, // ping package needs seconds
+        min_reply: 1,
+        extra: ['-c', this.retries.toString()],
+        numeric: true
+      };
       
-      const responseTime = endTime - startTime;
-      const isAlive = isWindows
-        ? stdout.includes('Reply from')
-        : stdout.includes(' 0% packet loss');
+      const startTime = Date.now();
+      
+      // Emit early progress to show active scanning
+      this.emit('progress', {
+        host: ip,
+        status: 'unknown', // Status not determined yet
+        completed: this.completed,
+        total: this.total
+      });
+      
+      // Perform the actual ping
+      const pingResult = await ping.promise.probe(ip, pingConfig);
+      const endTime = Date.now();
+      const responseTime = pingResult.time === 'unknown' ? undefined : parseFloat(pingResult.time);
+      
+      const isAlive = pingResult.alive;
       
       let hostResult: PingSweepResult = {
         ip,
@@ -172,7 +181,7 @@ export class PingSweepScanner extends EventEmitter {
       
       return hostResult;
     } catch (error) {
-      // Ping command failed, host is considered dead
+      // Ping failed, host is considered dead
       this.completed++;
       
       const result: PingSweepResult = {
