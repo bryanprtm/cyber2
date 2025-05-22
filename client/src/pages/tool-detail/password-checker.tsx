@@ -5,13 +5,13 @@ import { MatrixBackground } from "@/components/matrix-background";
 import Terminal from "@/components/terminal";
 
 export default function PasswordCheckerPage() {
-  const { addSystemLine, addInfoLine } = useTerminal();
+  const terminal = useTerminal();
 
   useEffect(() => {
     // Add some initial terminal messages when the page loads
-    addSystemLine("Password Checker module initialized");
-    addInfoLine("Ready to analyze password strength and security. Enter a password to begin.");
-  }, [addSystemLine, addInfoLine]);
+    terminal.addSystemLine("Password Checker module initialized");
+    terminal.addInfoLine("Ready to analyze password strength and security. Enter a password to begin.");
+  }, [terminal]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -59,7 +59,7 @@ export default function PasswordCheckerPage() {
           
           <div className="bg-card border border-accent/30 rounded-md p-4">
             <h2 className="text-lg font-tech text-accent mb-4">Terminal Output</h2>
-            <Terminal className="h-80 text-xs" lines={[]} />
+            <Terminal className="h-80 text-xs" lines={terminal.lines} />
           </div>
         </div>
       </div>
