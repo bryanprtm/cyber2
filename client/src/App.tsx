@@ -38,6 +38,7 @@ import RfiScannerPage from "@/pages/tool-detail/rfi-scanner";
 import FormFuzzerPage from "@/pages/tool-detail/form-fuzzer";
 import XmlInjectorPage from "@/pages/tool-detail/xml-injector";
 import BeefXssPage from "@/pages/tool-detail/beef-xss";
+import Base64EncoderPage from "@/pages/tool-detail/base64-encoder";
 import ScanHistory from "@/pages/scan-history";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
@@ -81,6 +82,7 @@ function Router() {
           <Route path="/tools/xml-injector" component={XmlInjectorPage} />
           <Route path="/tools/sql-injector" component={SqlInjectorPage} />
           <Route path="/tools/beef-xss" component={BeefXssPage} />
+          <Route path="/tools/base64-encoder" component={Base64EncoderPage} />
           <Route path="/scan-history" component={ScanHistory} />
           <Route component={NotFound} />
         </Switch>
