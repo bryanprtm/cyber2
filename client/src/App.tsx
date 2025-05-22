@@ -27,6 +27,7 @@ import MetadataExtractorPage from "@/pages/tool-detail/metadata-extractor";
 import HeaderAnalyzerPage from "@/pages/tool-detail/header-analyzer";
 import EmailHunterPage from "@/pages/tool-detail/email-hunter";
 import ShellUploaderPage from "@/pages/tool-detail/shell-uploader";
+import TechDetectorPage from "@/pages/tool-detail/tech-detector";
 import ScanHistory from "@/pages/scan-history";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
@@ -59,6 +60,7 @@ function Router() {
           <Route path="/tools/header-analyzer" component={HeaderAnalyzerPage} />
           <Route path="/tools/email-hunter" component={EmailHunterPage} />
           <Route path="/tools/shell-uploader" component={ShellUploaderPage} />
+          <Route path="/tools/tech-detector" component={TechDetectorPage} />
           <Route path="/scan-history" component={ScanHistory} />
           <Route component={NotFound} />
         </Switch>

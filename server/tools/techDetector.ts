@@ -1,6 +1,5 @@
 import axios from 'axios';
-import cheerio from 'cheerio';
-import { analyze } from 'wappalyzer-core';
+import * as cheerio from 'cheerio';
 
 export interface TechDetectorOptions {
   url: string;
@@ -37,82 +36,75 @@ export interface TechDetectorResult {
   scanTime: number;
 }
 
-// Technology categories
-const CATEGORY_MAPPING: Record<string, string> = {
-  '1': 'CMS',
-  '2': 'Message Boards',
-  '3': 'Database Managers',
-  '4': 'Documentation Tools',
-  '5': 'Widgets',
-  '6': 'Web Shops',
-  '7': 'Photo Galleries',
-  '8': 'Analytics',
-  '9': 'Hosting Panels',
-  '10': 'Aggregators',
-  '11': 'JavaScript Frameworks',
-  '12': 'Video Players',
-  '13': 'Comment Systems',
-  '14': 'Security',
-  '15': 'Font Scripts',
-  '16': 'Web Frameworks',
-  '17': 'Miscellaneous',
-  '18': 'Editors',
-  '19': 'LMS',
-  '20': 'Web Servers',
-  '21': 'Cache Tools',
-  '22': 'Rich Text Editors',
-  '23': 'JavaScript Graphics',
-  '24': 'Mobile Frameworks',
-  '25': 'Programming Languages',
-  '26': 'Operating Systems',
-  '27': 'Search Engines',
-  '28': 'Web Mail',
-  '29': 'CDN',
-  '30': 'Marketing Automation',
-  '31': 'Web Server Extensions',
-  '32': 'Databases',
-  '33': 'Maps',
-  '34': 'Advertising',
-  '35': 'Network Devices',
-  '36': 'Media Servers',
-  '37': 'Webcams',
-  '38': 'Printers',
-  '39': 'Payment Processors',
-  '40': 'Tag Managers',
-  '41': 'Paywalls',
-  '42': 'Build CI Systems',
-  '43': 'Control Systems',
-  '44': 'Remote Access',
-  '45': 'Development',
-  '46': 'Network Storage',
-  '47': 'Feed Readers',
-  '48': 'Document Management Systems',
-  '49': 'Landing Page Builders',
-  '50': 'Live Chat',
-  '51': 'CRM',
-  '52': 'SEO',
-  '53': 'Accounting',
-  '54': 'Cryptominers',
-  '55': 'Static Site Generator',
-  '56': 'User Onboarding',
-  '57': 'JavaScript Libraries',
-  '58': 'Containers',
-  '59': 'SaaS',
-  '60': 'PaaS',
-  '61': 'IaaS',
-  '62': 'Reverse Proxies',
-  '63': 'Load Balancers',
-  '64': 'UI Frameworks',
-  '65': 'Cookie Compliance',
-  '66': 'Accessibility',
-  '67': 'Authentication',
-  '68': 'SVG',
-  '69': 'Reservations & Booking',
-  '70': 'Surveys',
-  '71': 'Ecommerce',
-  '72': 'Social Media',
-  '73': 'Email Services',
-  '74': 'A/B Testing',
+// Technology patterns to detect
+const techPatterns = {
+  frameworks: [
+    { name: 'React', pattern: /react|reactjs/i, categories: ['JavaScript Framework'], website: 'https://reactjs.org' },
+    { name: 'Angular', pattern: /angular|ng-/i, categories: ['JavaScript Framework'], website: 'https://angular.io' },
+    { name: 'Vue.js', pattern: /vue|vuejs/i, categories: ['JavaScript Framework'], website: 'https://vuejs.org' },
+    { name: 'jQuery', pattern: /jquery/i, categories: ['JavaScript Library'], website: 'https://jquery.com' },
+    { name: 'Bootstrap', pattern: /bootstrap/i, categories: ['CSS Framework'], website: 'https://getbootstrap.com' },
+    { name: 'Tailwind CSS', pattern: /tailwind/i, categories: ['CSS Framework'], website: 'https://tailwindcss.com' },
+    { name: 'Express.js', pattern: /express/i, categories: ['Web Framework'], website: 'https://expressjs.com' },
+    { name: 'Laravel', pattern: /laravel/i, categories: ['Web Framework'], website: 'https://laravel.com' },
+    { name: 'Ruby on Rails', pattern: /rails/i, categories: ['Web Framework'], website: 'https://rubyonrails.org' },
+    { name: 'Django', pattern: /django/i, categories: ['Web Framework'], website: 'https://www.djangoproject.com' },
+    { name: 'Flask', pattern: /flask/i, categories: ['Web Framework'], website: 'https://flask.palletsprojects.com' },
+    { name: 'Next.js', pattern: /next-js|nextjs|__next/i, categories: ['JavaScript Framework'], website: 'https://nextjs.org' },
+    { name: 'Gatsby', pattern: /gatsby/i, categories: ['Static Site Generator'], website: 'https://www.gatsbyjs.com' },
+    { name: 'Svelte', pattern: /svelte/i, categories: ['JavaScript Framework'], website: 'https://svelte.dev' },
+    { name: 'Nuxt.js', pattern: /nuxt|__nuxt/i, categories: ['JavaScript Framework'], website: 'https://nuxtjs.org' },
+  ],
+  cms: [
+    { name: 'WordPress', pattern: /wordpress|wp-content|wp-includes/i, categories: ['CMS'], website: 'https://wordpress.org' },
+    { name: 'Drupal', pattern: /drupal/i, categories: ['CMS'], website: 'https://www.drupal.org' },
+    { name: 'Joomla', pattern: /joomla/i, categories: ['CMS'], website: 'https://www.joomla.org' },
+    { name: 'Magento', pattern: /magento/i, categories: ['CMS', 'E-commerce'], website: 'https://magento.com' },
+    { name: 'Shopify', pattern: /shopify/i, categories: ['CMS', 'E-commerce'], website: 'https://www.shopify.com' },
+    { name: 'Squarespace', pattern: /squarespace/i, categories: ['CMS'], website: 'https://www.squarespace.com' },
+    { name: 'Wix', pattern: /wix/i, categories: ['CMS'], website: 'https://www.wix.com' },
+    { name: 'Ghost', pattern: /ghost/i, categories: ['CMS'], website: 'https://ghost.org' },
+    { name: 'Contentful', pattern: /contentful/i, categories: ['Headless CMS'], website: 'https://www.contentful.com' },
+    { name: 'Strapi', pattern: /strapi/i, categories: ['Headless CMS'], website: 'https://strapi.io' },
+  ],
+  analytics: [
+    { name: 'Google Analytics', pattern: /google-analytics|googletagmanager|gtag|ga\(/i, categories: ['Analytics'], website: 'https://analytics.google.com' },
+    { name: 'Google Tag Manager', pattern: /googletagmanager|gtm/i, categories: ['Tag Manager'], website: 'https://tagmanager.google.com' },
+    { name: 'Hotjar', pattern: /hotjar/i, categories: ['Analytics'], website: 'https://www.hotjar.com' },
+    { name: 'Matomo', pattern: /matomo|piwik/i, categories: ['Analytics'], website: 'https://matomo.org' },
+    { name: 'Mixpanel', pattern: /mixpanel/i, categories: ['Analytics'], website: 'https://mixpanel.com' },
+    { name: 'Segment', pattern: /segment/i, categories: ['Analytics'], website: 'https://segment.com' },
+    { name: 'Facebook Pixel', pattern: /facebook-pixel|fbevents|fbq\(/i, categories: ['Analytics'], website: 'https://www.facebook.com/business/tools/meta-pixel' },
+  ],
+  jsLibraries: [
+    { name: 'Lodash', pattern: /lodash|_\./i, categories: ['JavaScript Library'], website: 'https://lodash.com' },
+    { name: 'Moment.js', pattern: /moment\.js|moment\(/i, categories: ['JavaScript Library'], website: 'https://momentjs.com' },
+    { name: 'D3.js', pattern: /d3\.js|d3-/i, categories: ['Visualization'], website: 'https://d3js.org' },
+    { name: 'Chart.js', pattern: /chart\.js/i, categories: ['Visualization'], website: 'https://www.chartjs.org' },
+    { name: 'THREE.js', pattern: /three\.js/i, categories: ['3D'], website: 'https://threejs.org' },
+    { name: 'Axios', pattern: /axios/i, categories: ['HTTP Client'], website: 'https://axios-http.com' },
+    { name: 'Socket.io', pattern: /socket\.io/i, categories: ['WebSockets'], website: 'https://socket.io' },
+    { name: 'Redux', pattern: /redux/i, categories: ['State Management'], website: 'https://redux.js.org' },
+    { name: 'Underscore', pattern: /_\./i, categories: ['JavaScript Library'], website: 'https://underscorejs.org' },
+    { name: 'Alpine.js', pattern: /alpine\.js|x-data/i, categories: ['JavaScript Framework'], website: 'https://alpinejs.dev' },
+  ],
+  servers: [
+    { name: 'Apache', pattern: /apache/i, categories: ['Web Server'], website: 'https://httpd.apache.org' },
+    { name: 'Nginx', pattern: /nginx/i, categories: ['Web Server'], website: 'https://nginx.org' },
+    { name: 'Microsoft IIS', pattern: /iis|microsoft-iis/i, categories: ['Web Server'], website: 'https://www.iis.net' },
+    { name: 'Cloudflare', pattern: /cloudflare/i, categories: ['CDN'], website: 'https://www.cloudflare.com' },
+    { name: 'Node.js', pattern: /node\.js|express/i, categories: ['Application Server'], website: 'https://nodejs.org' },
+    { name: 'Vercel', pattern: /vercel/i, categories: ['Hosting Platform'], website: 'https://vercel.com' },
+    { name: 'Netlify', pattern: /netlify/i, categories: ['Hosting Platform'], website: 'https://www.netlify.com' },
+    { name: 'LiteSpeed', pattern: /litespeed/i, categories: ['Web Server'], website: 'https://www.litespeedtech.com' },
+  ],
+  languages: [
+    { name: 'PHP', pattern: /php/i, categories: ['Programming Language'], website: 'https://www.php.net' },
+    { name: 'ASP.NET', pattern: /asp\.net/i, categories: ['Framework'], website: 'https://dotnet.microsoft.com/apps/aspnet' },
+    { name: 'Ruby', pattern: /ruby|rails/i, categories: ['Programming Language'], website: 'https://www.ruby-lang.org' },
+    { name: 'Python', pattern: /python|django|flask/i, categories: ['Programming Language'], website: 'https://www.python.org' },
+    { name: 'Java', pattern: /java|jsp|servlet/i, categories: ['Programming Language'], website: 'https://www.java.com' },
+  ]
 };
 
 /**
@@ -156,14 +148,20 @@ export async function detectTechnologies(options: TechDetectorOptions): Promise<
       
       cookieArray.forEach(cookieStr => {
         const parts = cookieStr.split(';');
-        const [name, value] = parts[0].split('=').map(s => s.trim());
-        cookies.push({ name, value });
+        const mainPart = parts[0].split('=');
+        const cookie: any = {
+          name: mainPart[0],
+          value: mainPart[1],
+          secure: cookieStr.includes('secure'),
+          httpOnly: cookieStr.includes('HttpOnly')
+        };
+        cookies.push(cookie);
       });
     }
     
     // Extract meta tags
     const metaTags: Record<string, string> = {};
-    $('meta').each((_, element) => {
+    $('meta').each(function(_, element) {
       const name = $(element).attr('name') || $(element).attr('property');
       const content = $(element).attr('content');
       
@@ -172,86 +170,32 @@ export async function detectTechnologies(options: TechDetectorOptions): Promise<
       }
     });
     
-    // Extract scripts for deeper analysis if requested
-    let scripts: string[] = [];
-    if (options.checkScripts) {
-      $('script').each((_, element) => {
-        const src = $(element).attr('src');
-        if (src) {
-          scripts.push(src);
-        }
-      });
-    }
+    // Detect all technologies
+    const jsLibraries = detectTechnologiesByCategory('jsLibraries', html, $, headers);
+    const frameworks = detectTechnologiesByCategory('frameworks', html, $, headers);
+    const cms = detectTechnologiesByCategory('cms', html, $, headers);
+    const analytics = detectTechnologiesByCategory('analytics', html, $, headers);
     
-    // Get server information
+    // Get server info
     const serverInfo = {
       server: headers['server'],
       poweredBy: headers['x-powered-by'],
-      language: detectServerLanguage(headers, metaTags)
+      language: detectServerLanguage(headers, html)
     };
     
-    // Prepare data for Wappalyzer analysis
-    const url = new URL(options.url);
-    const wappalyzerData = {
+    // Create a list of all technologies
+    const technologies = [
+      ...jsLibraries,
+      ...frameworks,
+      ...cms,
+      ...analytics
+    ].filter((tech, index, self) => 
+      index === self.findIndex(t => t.name === tech.name)
+    );
+    
+    const result: TechDetectorResult = {
       url: options.url,
-      html,
-      headers,
-      scriptSrc: scripts,
-      cookies: cookies.reduce((acc, cookie) => {
-        acc[cookie.name] = cookie.value;
-        return acc;
-      }, {} as Record<string, string>),
-      meta: metaTags
-    };
-    
-    // Use Wappalyzer to analyze the site
-    const wappalyzerResults = analyze(wappalyzerData);
-    
-    // Process and categorize the results
-    const allTechnologies: TechnologyResult[] = Object.entries(wappalyzerResults).map(([name, data]) => {
-      const categories = data.categories.map(catId => CATEGORY_MAPPING[String(catId)] || `Category ${catId}`);
-      
-      return {
-        name,
-        categories,
-        confidence: data.confidence,
-        version: data.version,
-        website: data.website,
-        icon: data.icon
-      };
-    });
-    
-    // Sort technologies by confidence
-    allTechnologies.sort((a, b) => b.confidence - a.confidence);
-    
-    // Filter technologies into specific categories
-    const frameworks = allTechnologies.filter(tech => 
-      tech.categories.some(cat => 
-        cat === 'Web Frameworks' || 
-        cat === 'JavaScript Frameworks' || 
-        cat === 'Mobile Frameworks' ||
-        cat === 'UI Frameworks'
-      )
-    );
-    
-    const cms = allTechnologies.filter(tech => 
-      tech.categories.some(cat => cat === 'CMS')
-    );
-    
-    const jsLibraries = allTechnologies.filter(tech => 
-      tech.categories.some(cat => cat === 'JavaScript Libraries')
-    );
-    
-    const analytics = allTechnologies.filter(tech => 
-      tech.categories.some(cat => cat === 'Analytics')
-    );
-    
-    const endTime = Date.now();
-    
-    // Return the structured result
-    return {
-      url: options.url,
-      technologies: allTechnologies,
+      technologies,
       frameworks,
       cms,
       serverInfo,
@@ -260,8 +204,10 @@ export async function detectTechnologies(options: TechDetectorOptions): Promise<
       headers,
       cookies,
       metaTags,
-      scanTime: endTime - startTime
+      scanTime: Date.now() - startTime
     };
+    
+    return result;
   } catch (error) {
     console.error('Technology detection error:', error);
     throw new Error(`Technology detection failed: ${(error as Error).message}`);
@@ -269,39 +215,96 @@ export async function detectTechnologies(options: TechDetectorOptions): Promise<
 }
 
 /**
- * Try to detect server programming language from headers and meta tags
+ * Detect technologies by category
  */
-function detectServerLanguage(headers: Record<string, string>, metaTags: Record<string, string>): string | undefined {
-  // Check common server headers
+function detectTechnologiesByCategory(
+  category: keyof typeof techPatterns,
+  html: string,
+  $: cheerio.CheerioAPI,
+  headers: Record<string, string>
+): TechnologyResult[] {
+  const results: TechnologyResult[] = [];
+  const patterns = techPatterns[category];
+  
+  // Check for patterns in HTML
+  for (const tech of patterns) {
+    let confidence = 0;
+    
+    // Check HTML content
+    if (tech.pattern.test(html)) {
+      confidence += 60;
+    }
+    
+    // Check script sources
+    if ($(`script[src*="${tech.name.toLowerCase()}"]`).length > 0) {
+      confidence += 80;
+    }
+    
+    // Check inline script content
+    let inlineScriptMatches = 0;
+    $('script').each(function(_, element) {
+      const content = $(element).html();
+      if (content && tech.pattern.test(content)) {
+        inlineScriptMatches++;
+      }
+    });
+    
+    if (inlineScriptMatches > 0) {
+      confidence += Math.min(inlineScriptMatches * 10, 70);
+    }
+    
+    // Check CSS links
+    if ($(`link[href*="${tech.name.toLowerCase()}"]`).length > 0) {
+      confidence += 70;
+    }
+    
+    // Check meta tags
+    if ($(`meta[name*="${tech.name.toLowerCase()}"], meta[content*="${tech.name.toLowerCase()}"]`).length > 0) {
+      confidence += 90;
+    }
+    
+    // Check headers
+    for (const [headerName, headerValue] of Object.entries(headers)) {
+      if (tech.pattern.test(headerValue)) {
+        confidence += 90;
+      }
+    }
+    
+    // Add to results if confidence is high enough
+    if (confidence > 40) {
+      results.push({
+        name: tech.name,
+        categories: tech.categories,
+        confidence: Math.min(confidence, 100),
+        website: tech.website
+      });
+    }
+  }
+  
+  return results;
+}
+
+/**
+ * Detect server-side language
+ */
+function detectServerLanguage(headers: Record<string, string>, html: string): string | undefined {
+  // Check headers for language clues
   if (headers['x-powered-by']) {
-    const poweredBy = headers['x-powered-by'].toLowerCase();
-    
-    if (poweredBy.includes('php')) return 'PHP';
-    if (poweredBy.includes('asp.net')) return 'ASP.NET';
-    if (poweredBy.includes('nodejs')) return 'Node.js';
-    if (poweredBy.includes('ruby')) return 'Ruby';
-    if (poweredBy.includes('python')) return 'Python';
-    if (poweredBy.includes('java')) return 'Java';
+    if (/php/i.test(headers['x-powered-by'])) return 'PHP';
+    if (/asp\.net/i.test(headers['x-powered-by'])) return 'ASP.NET';
+    if (/express/i.test(headers['x-powered-by'])) return 'Node.js (Express)';
+    if (/node/i.test(headers['x-powered-by'])) return 'Node.js';
+    if (/rails/i.test(headers['x-powered-by'])) return 'Ruby on Rails';
   }
   
-  // Check for framework-specific headers
-  if (headers['x-rails-version']) return 'Ruby (Rails)';
-  if (headers['x-django-version']) return 'Python (Django)';
-  if (headers['x-aspnet-version']) return 'ASP.NET';
-  if (headers['x-drupal-cache']) return 'PHP (Drupal)';
-  if (headers['x-generator'] && headers['x-generator'].toLowerCase().includes('wordpress')) return 'PHP (WordPress)';
-  
-  // Check meta generator tag
-  if (metaTags['generator']) {
-    const generator = metaTags['generator'].toLowerCase();
-    
-    if (generator.includes('wordpress')) return 'PHP (WordPress)';
-    if (generator.includes('drupal')) return 'PHP (Drupal)';
-    if (generator.includes('joomla')) return 'PHP (Joomla)';
-    if (generator.includes('ghost')) return 'Node.js (Ghost)';
-    if (generator.includes('django')) return 'Python (Django)';
-    if (generator.includes('ruby on rails')) return 'Ruby (Rails)';
-  }
+  // Check for HTML clues
+  if (/wp-content|wp-includes/i.test(html)) return 'PHP (WordPress)';
+  if (/drupal/i.test(html)) return 'PHP (Drupal)';
+  if (/joomla/i.test(html)) return 'PHP (Joomla)';
+  if (/django/i.test(html)) return 'Python (Django)';
+  if (/laravel/i.test(html)) return 'PHP (Laravel)';
+  if (/ruby on rails|rails/i.test(html)) return 'Ruby (Rails)';
+  if (/\.jsp|javax|java/i.test(html)) return 'Java';
   
   return undefined;
 }
