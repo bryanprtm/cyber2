@@ -10,6 +10,7 @@ import { handleTechDetection } from "./controllers/techDetectorController";
 import { handlePasswordCheck } from "./controllers/passwordCheckerController";
 import { handleFileScanning } from "./controllers/fileScannerController";
 import { handleUrlScanning } from "./controllers/urlScannerController";
+import { handleCorsTesting } from "./controllers/corsTesterController";
 import { getAllTools, addTool, updateTool } from "./controllers/toolsController";
 import multer from "multer";
 
@@ -58,6 +59,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // URL Scanner API
   app.post("/api/security/url-scanner", handleUrlScanning);
+  
+  // CORS Tester API
+  app.post("/api/security/cors-tester", handleCorsTesting);
   
   // Note: WHOIS Lookup API is now handled by the controller at line 82
   

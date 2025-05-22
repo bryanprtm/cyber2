@@ -31,6 +31,7 @@ import TechDetectorPage from "@/pages/tool-detail/tech-detector";
 import PasswordCheckerPage from "@/pages/tool-detail/password-checker";
 import FileScannerPage from "@/pages/tool-detail/file-scanner";
 import UrlScannerPage from "@/pages/tool-detail/url-scanner";
+import CorsTesterPage from "@/pages/tool-detail/cors-tester";
 import ScanHistory from "@/pages/scan-history";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
@@ -67,6 +68,7 @@ function Router() {
           <Route path="/tools/password-checker" component={PasswordCheckerPage} />
           <Route path="/tools/file-scanner" component={FileScannerPage} />
           <Route path="/tools/url-scanner" component={UrlScannerPage} />
+          <Route path="/tools/cors-tester" component={CorsTesterPage} />
           <Route path="/scan-history" component={ScanHistory} />
           <Route component={NotFound} />
         </Switch>
