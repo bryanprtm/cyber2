@@ -184,6 +184,13 @@ export const tools: Tool[] = [
     category: "web",
     categoryLabel: "WebApp"
   },
+  {
+    id: "beef-xss",
+    name: "BeEF XSS Framework",
+    description: "Browser Exploitation Framework for XSS testing and payload generation.",
+    category: "web",
+    categoryLabel: "WebApp"
+  },
   
   // Password Tools
   {

@@ -16,6 +16,7 @@ import { handleRfiScanning } from "./controllers/rfiScannerController";
 import { handleFormFuzzing } from "./controllers/formFuzzerController";
 import { handleXmlInjectionTesting } from "./controllers/xmlInjectorController";
 import { handleSqlInjectionTesting, getSqlInjectionPayloads } from "./controllers/sqlInjectorController";
+import { handleBeefXss } from "./controllers/beefXssController";
 import { getAllTools, addTool, updateTool } from "./controllers/toolsController";
 import multer from "multer";
 
@@ -83,6 +84,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // SQL Injector API
   app.post("/api/security/sql-injector", handleSqlInjectionTesting);
   app.get("/api/security/sql-injector/payloads", getSqlInjectionPayloads);
+  
+  // BeEF XSS Framework API
+  app.post("/api/security/beef-xss", handleBeefXss);
   
   // Note: WHOIS Lookup API is now handled by the controller at line 82
   
