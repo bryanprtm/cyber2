@@ -131,6 +131,13 @@ export const tools: Tool[] = [
     category: "info",
     categoryLabel: "Domain"
   },
+  {
+    id: "opencti",
+    name: "OpenCTI Platform",
+    description: "Access and analyze cyber threat intelligence data from the OpenCTI platform.",
+    category: "info",
+    categoryLabel: "Threat Intel"
+  },
   
   // Security Testing Tools
   {
