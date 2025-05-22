@@ -210,6 +210,13 @@ export const tools: Tool[] = [
   
   // Shell & Command Tools
   {
+    id: "shell-uploader",
+    name: "Adaptive Shell Uploader",
+    description: "Analyze websites for shell upload vulnerabilities, detecting potential security weaknesses.",
+    category: "shell",
+    categoryLabel: "Shell & Command Tools"
+  },
+  {
     id: "base64-encoder",
     name: "Base64 Encoder/Decoder",
     description: "Encode or decode data using Base64.",
