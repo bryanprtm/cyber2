@@ -31,7 +31,7 @@ export async function handleBeefXss(req: Request, res: Response) {
       const result = await generateBeefHook(options);
       
       // If user is authenticated, store the result
-      const userId = req.session?.user?.id;
+      const userId = req.body.userId || 1; // Default to user ID 1 if not authenticated
       if (userId) {
         const scanResultData: InsertScanResult = {
           userId,

@@ -60,7 +60,7 @@ const availableModules = [
 
 export default function BeefXss() {
   const { toast } = useToast();
-  const { addSystemLine, addErrorLine, addInfoLine, clear } = useTerminal();
+  const { addSystemLine, addErrorLine, addInfoLine, clearLines } = useTerminal();
   
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("generator");
@@ -82,12 +82,13 @@ export default function BeefXss() {
   const onSubmit = async (data: FormValues) => {
     try {
       setLoading(true);
-      clear();
+      clearLines();
       addSystemLine("Initializing BeEF XSS hook generator...");
       
       const response = await apiRequest("/api/security/beef-xss", {
         method: "POST",
-        data
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
       });
       
       addInfoLine(`Target: ${data.target}`);
