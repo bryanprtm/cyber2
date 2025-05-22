@@ -85,7 +85,7 @@ export default function Home() {
         
         <div className="relative">
           <h2 className="text-2xl font-tech mb-6 text-center">Interactive Terminal</h2>
-          <Terminal />
+          <Terminal lines={[]} />
         </div>
       </div>
       

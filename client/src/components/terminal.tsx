@@ -1,117 +1,102 @@
-import { useRef, useEffect } from "react";
-import { cn } from "@/lib/utils";
-import { useTerminal } from "@/hooks/use-terminal";
-import { Copy, Download, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import React, { useEffect, useRef } from 'react';
+import { TerminalLine } from '@/hooks/use-terminal';
+import { 
+  AlertCircle, 
+  Terminal as TerminalIcon, 
+  CheckCircle2, 
+  Info, 
+  MonitorPlay 
+} from 'lucide-react';
 
 interface TerminalProps {
+  lines: TerminalLine[];
+  maxHeight?: string;
   className?: string;
 }
 
-export default function Terminal({ className }: TerminalProps) {
-  const { 
-    outputLines, 
-    clearTerminal, 
-    copyTerminalContent, 
-    downloadTerminalContent 
-  } = useTerminal();
-  
+const Terminal: React.FC<TerminalProps> = ({ 
+  lines = [], 
+  maxHeight = '300px',
+  className = '' 
+}) => {
   const terminalRef = useRef<HTMLDivElement>(null);
 
+  // Auto-scroll to the bottom when new lines are added
   useEffect(() => {
     if (terminalRef.current) {
       terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
     }
-  }, [outputLines]);
+  }, [lines]);
+
+  // Get icon for line type
+  const getLineIcon = (type: TerminalLine['type']) => {
+    switch (type) {
+      case 'success':
+        return <CheckCircle2 className="h-4 w-4 text-green-500 mr-2 shrink-0" />;
+      case 'error':
+        return <AlertCircle className="h-4 w-4 text-red-500 mr-2 shrink-0" />;
+      case 'info':
+        return <Info className="h-4 w-4 text-blue-500 mr-2 shrink-0" />;
+      case 'system':
+        return <MonitorPlay className="h-4 w-4 text-purple-500 mr-2 shrink-0" />;
+      case 'command':
+        return <TerminalIcon className="h-4 w-4 text-amber-500 mr-2 shrink-0" />;
+      default:
+        return null;
+    }
+  };
+
+  // Format timestamp
+  const formatTimestamp = (date: Date) => {
+    return date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false 
+    });
+  };
+
+  // Get class name for line type
+  const getLineClassName = (type: TerminalLine['type']) => {
+    switch (type) {
+      case 'success':
+        return 'text-green-500';
+      case 'error':
+        return 'text-red-500';
+      case 'info':
+        return 'text-blue-500';
+      case 'system':
+        return 'text-purple-500';
+      case 'command':
+        return 'text-amber-500 font-bold';
+      default:
+        return '';
+    }
+  };
 
   return (
-    <div className={cn("terminal rounded-md", className)}>
-      <div className="bg-[hsl(var(--terminal-bg))] p-2 rounded-t flex justify-between items-center border-b border-primary/30">
-        <div className="text-primary font-tech text-sm">Terminal Output</div>
-        <div className="flex space-x-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="text-secondary hover:text-primary transition-colors h-6 w-6"
-                  onClick={copyTerminalContent}
-                >
-                  <Copy className="h-4 w-4" />
-                  <span className="sr-only">Copy</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Copy content</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="text-secondary hover:text-primary transition-colors h-6 w-6"
-                  onClick={downloadTerminalContent}
-                >
-                  <Download className="h-4 w-4" />
-                  <span className="sr-only">Download</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Download log</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="text-secondary hover:text-primary transition-colors h-6 w-6"
-                  onClick={clearTerminal}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  <span className="sr-only">Clear</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Clear terminal</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      </div>
-      <div 
-        ref={terminalRef}
-        className="p-4 font-code text-sm text-foreground h-64 overflow-y-auto bg-[hsl(var(--terminal-bg))]"
-      >
-        {outputLines.map((line, index) => (
-          <div 
-            key={index} 
-            className={cn(
-              "mb-2",
-              line.type === "system" && "text-primary",
-              line.type === "info" && "text-secondary", 
-              line.type === "error" && "text-accent",
-              line.type === "warning" && "text-accent",
-              line.type === "success" && "text-green-500",
-              line.type === "command" && "text-primary"
-            )}
-          >
-            {line.content}
+    <div 
+      className={`bg-black bg-opacity-80 text-white font-mono text-sm p-3 rounded-md overflow-auto ${className}`}
+      style={{ maxHeight }}
+      ref={terminalRef}
+    >
+      {lines && lines.length > 0 ? (
+        lines.map((line) => (
+          <div key={line.id} className="py-1 flex items-start">
+            <span className="text-gray-500 text-xs mr-2 mt-0.5">
+              {formatTimestamp(line.timestamp)}
+            </span>
+            {getLineIcon(line.type)}
+            <div className={`break-words ${getLineClassName(line.type)}`}>
+              {line.content}
+            </div>
           </div>
-        ))}
-        <div className="text-primary">
-          user@cyberpulse:~$ <span className="cursor"></span>
-        </div>
-      </div>
+        ))
+      ) : (
+        <div className="text-gray-500 italic">No output yet</div>
+      )}
     </div>
   );
-}
+};
+
+export default Terminal;

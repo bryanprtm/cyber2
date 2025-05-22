@@ -1,107 +1,101 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useToast } from './use-toast';
 
-interface WebSocketMessage {
+export interface WebSocketMessage {
   type: string;
   data: any;
 }
 
-export function useWebSocket(path: string = '/ws/tools') {
+export function useWebSocket() {
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
-  const [messageHistory, setMessageHistory] = useState<WebSocketMessage[]>([]);
-  const wsRef = useRef<WebSocket | null>(null);
-  const { toast } = useToast();
-
-  // Get the WebSocket URL based on current window location
-  const getWebSocketUrl = useCallback(() => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
-    return `${protocol}//${host}${path}`;
-  }, [path]);
+  const socketRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<number | null>(null);
 
   // Connect to the WebSocket server
   const connect = useCallback(() => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      return; // Already connected
+    // Close existing socket if any
+    if (socketRef.current) {
+      socketRef.current.close();
     }
 
-    const ws = new WebSocket(getWebSocketUrl());
-    
-    ws.onopen = () => {
-      setIsConnected(true);
-      console.log('Connected to WebSocket server');
-    };
-    
-    ws.onclose = () => {
-      setIsConnected(false);
-      console.log('Disconnected from WebSocket server');
-      
-      // Try to reconnect after a delay
-      setTimeout(() => {
-        if (wsRef.current === ws) { // Only reconnect if this is still the current connection
+    // Clear any pending reconnection
+    if (reconnectTimeoutRef.current) {
+      window.clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+
+    try {
+      // Determine the WebSocket URL based on the current location
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws/tools`;
+
+      // Create a new WebSocket connection
+      const socket = new WebSocket(wsUrl);
+      socketRef.current = socket;
+
+      // Set up event handlers
+      socket.onopen = () => {
+        console.log('WebSocket connection established');
+        setIsConnected(true);
+      };
+
+      socket.onclose = (event) => {
+        console.log(`WebSocket connection closed: ${event.code} - ${event.reason}`);
+        setIsConnected(false);
+
+        // Attempt to reconnect after a delay
+        reconnectTimeoutRef.current = window.setTimeout(() => {
+          console.log('Attempting to reconnect to WebSocket...');
           connect();
+        }, 3000);
+      };
+
+      socket.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+
+      socket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          setLastMessage(data);
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
         }
-      }, 3000);
-    };
-    
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      toast({
-        title: 'Connection Error',
-        description: 'Failed to connect to the tool server',
-        variant: 'destructive'
-      });
-    };
-    
-    ws.onmessage = (event) => {
-      try {
-        const message = JSON.parse(event.data) as WebSocketMessage;
-        setLastMessage(message);
-        setMessageHistory(prev => [...prev, message]);
-      } catch (error) {
-        console.error('Failed to parse WebSocket message:', error);
-      }
-    };
-    
-    wsRef.current = ws;
-    
-    // Cleanup on unmount
-    return () => {
-      ws.close();
-    };
-  }, [getWebSocketUrl, toast]);
-
-  // Send a message through the WebSocket
-  const sendMessage = useCallback((type: string, data: any) => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ type, data }));
-      return true;
-    } else {
-      console.error('WebSocket is not connected');
-      toast({
-        title: 'Connection Error',
-        description: 'Not connected to the tool server',
-        variant: 'destructive'
-      });
-      return false;
+      };
+    } catch (error) {
+      console.error('Error creating WebSocket connection:', error);
     }
-  }, [toast]);
-
-  // Clear message history
-  const clearMessages = useCallback(() => {
-    setMessageHistory([]);
   }, []);
 
-  // Connect on mount
+  // Send a message to the WebSocket server
+  const sendMessage = useCallback((type: string, data: any): boolean => {
+    if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
+      console.error('Cannot send message: WebSocket is not connected');
+      return false;
+    }
+
+    try {
+      const message: WebSocketMessage = { type, data };
+      socketRef.current.send(JSON.stringify(message));
+      return true;
+    } catch (error) {
+      console.error('Error sending WebSocket message:', error);
+      return false;
+    }
+  }, []);
+
+  // Connect when the component mounts
   useEffect(() => {
     connect();
-    
-    // Cleanup on unmount
+
+    // Clean up when the component unmounts
     return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
+      if (socketRef.current) {
+        socketRef.current.close();
+      }
+
+      if (reconnectTimeoutRef.current) {
+        window.clearTimeout(reconnectTimeoutRef.current);
       }
     };
   }, [connect]);
@@ -109,8 +103,7 @@ export function useWebSocket(path: string = '/ws/tools') {
   return {
     isConnected,
     lastMessage,
-    messageHistory,
     sendMessage,
-    clearMessages
+    connect,
   };
 }

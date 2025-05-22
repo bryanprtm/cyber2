@@ -22,6 +22,7 @@ import TraceroutePage from "@/pages/tool-detail/traceroute";
 import DnsLookupPage from "@/pages/tool-detail/dns-lookup";
 import SubnetCalculatorPage from "@/pages/tool-detail/subnet-calculator";
 import PacketAnalyzerPage from "@/pages/tool-detail/packet-analyzer";
+import WhoisLookupPage from "@/pages/tool-detail/whois-lookup";
 import ScanHistory from "@/pages/scan-history";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
@@ -50,6 +51,7 @@ function Router() {
           <Route path="/tools/dns-lookup" component={DnsLookupPage} />
           <Route path="/tools/subnet-calculator" component={SubnetCalculatorPage} />
           <Route path="/tools/packet-analyzer" component={PacketAnalyzerPage} />
+          <Route path="/tools/whois-lookup" component={WhoisLookupPage} />
           <Route path="/scan-history" component={ScanHistory} />
           <Route component={NotFound} />
         </Switch>
