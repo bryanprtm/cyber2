@@ -35,7 +35,6 @@ export async function handleHeaderAnalysis(req: Request, res: Response) {
         toolId: 'header-analyzer',
         target: url,
         results: results,
-        summary: `Analyzed ${url} - Security Score: ${results.securityScore}/100`,
         status: 'completed'
       };
       
