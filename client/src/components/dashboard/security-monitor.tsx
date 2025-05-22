@@ -103,11 +103,49 @@ interface ThreatIntelligence {
   isPhishing: boolean;
   isMalware: boolean;
   isBotnet: boolean;
+  isApiFlaw: boolean;
+  isDataBreach: boolean;
   isBlacklisted: boolean;
   blacklistSources: string[];
   abuseReports: number;
   lastReportDate?: Date;
   riskScore: number;
+  lastChecked: Date;
+  // OWASP Top 10 vulnerabilities
+  owaspVulnerabilities?: Array<{
+    id: string;
+    name: string;
+    detected: boolean;
+    severity: "critical" | "high" | "medium" | "low";
+    description: string;
+  }>;
+  // MITRE ATT&CK framework data
+  mitreTactics?: Array<{
+    id: string;
+    name: string;
+    detected: boolean;
+    techniques: string[];
+  }>;
+  // Compliance status data
+  complianceStatus?: Array<{
+    standard: string;
+    status: "Compliant" | "Non-Compliant";
+    issues: string[];
+  }>;
+  // Additional threat intelligence indicators
+  threatIndicators?: {
+    maliciousIPs: number;
+    suspiciousDomains: number;
+    malwareHashes: number;
+    knownThreatActors: number;
+  };
+  // Overall security posture assessment
+  securityPosture?: {
+    patchStatus: string;
+    firewallStatus: string;
+    encryptionStatus: string;
+    authenticationSecurity: string;
+  };
 }
 
 interface SecurityRecommendation {
