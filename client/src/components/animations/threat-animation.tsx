@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { useTheme } from "next-themes";
+// Import local theme context instead of next-themes
+import { useContext } from "react";
 
 interface ThreatAnimationProps {
   intensity?: number; // 0-100, controls number of particles and speed
