@@ -34,6 +34,7 @@ import UrlScannerPage from "@/pages/tool-detail/url-scanner";
 import CorsTesterPage from "@/pages/tool-detail/cors-tester";
 import LfiScannerPage from "@/pages/tool-detail/lfi-scanner";
 import RfiScannerPage from "@/pages/tool-detail/rfi-scanner";
+import FormFuzzerPage from "@/pages/tool-detail/form-fuzzer";
 import ScanHistory from "@/pages/scan-history";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
@@ -72,6 +73,7 @@ function Router() {
           <Route path="/tools/cors-tester" component={CorsTesterPage} />
           <Route path="/tools/lfi-scanner" component={LfiScannerPage} />
           <Route path="/tools/rfi-scanner" component={RfiScannerPage} />
+          <Route path="/tools/form-fuzzer" component={FormFuzzerPage} />
           <Route path="/tools/sql-injector" component={SqlInjectorPage} />
           <Route path="/scan-history" component={ScanHistory} />
           <Route component={NotFound} />
