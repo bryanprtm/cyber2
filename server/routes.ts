@@ -7,6 +7,7 @@ import { handleHeaderAnalysis } from "./controllers/headerAnalyzerController";
 import { handleEmailHunting } from "./controllers/emailHunterController";
 import { handleShellUploaderAnalysis } from "./controllers/shellUploaderController";
 import { handleTechDetection } from "./controllers/techDetectorController";
+import { handlePasswordCheck } from "./controllers/passwordCheckerController";
 import { getAllTools, addTool, updateTool } from "./controllers/toolsController";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -44,6 +45,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Tech Detector API
   app.post("/api/scan/tech-detector", handleTechDetection);
+  
+  // Password Checker API
+  app.post("/api/security/password-checker", handlePasswordCheck);
   
   // Note: WHOIS Lookup API is now handled by the controller at line 82
   
