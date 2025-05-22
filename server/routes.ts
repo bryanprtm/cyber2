@@ -14,6 +14,7 @@ import { handleCorsTesting } from "./controllers/corsTesterController";
 import { handleLfiScanning } from "./controllers/lfiScannerController";
 import { handleRfiScanning } from "./controllers/rfiScannerController";
 import { handleFormFuzzing } from "./controllers/formFuzzerController";
+import { handleXmlInjectionTesting } from "./controllers/xmlInjectorController";
 import { handleSqlInjectionTesting, getSqlInjectionPayloads } from "./controllers/sqlInjectorController";
 import { getAllTools, addTool, updateTool } from "./controllers/toolsController";
 import multer from "multer";
@@ -75,6 +76,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Form Fuzzer API
   app.post("/api/security/form-fuzzer", handleFormFuzzing);
+  
+  // XML Injector API
+  app.post("/api/security/xml-injector", handleXmlInjectionTesting);
   
   // SQL Injector API
   app.post("/api/security/sql-injector", handleSqlInjectionTesting);
