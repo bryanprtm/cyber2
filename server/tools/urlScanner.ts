@@ -588,6 +588,6 @@ function simulateReputationCheck(url: string): UrlScanResult['reputationInfo'] {
     categories,
     firstSeen,
     lastUpdated,
-    source: 'CyberPulse Simulation'
+    source: 'Security Operation Center Simulation'
   };
 }

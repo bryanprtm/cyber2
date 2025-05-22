@@ -1,8 +1,8 @@
-# CyberPulse - Cybersecurity Toolkit Web Application
+# Security Operation Center - Cybersecurity Toolkit Web Application
 
 ## Overview
 
-CyberPulse is a web-based cybersecurity toolkit designed for educational purposes. The application provides various security tools like port scanning, vulnerability testing, and network analysis through a modern UI. The project is built using a React frontend with a Node.js/Express backend, with data storage handled by Drizzle ORM.
+Security Operation Center is a web-based cybersecurity toolkit designed for educational purposes. The application provides various security tools like port scanning, vulnerability testing, and network analysis through a modern UI. The project is built using a React frontend with a Node.js/Express backend, with data storage handled by Drizzle ORM.
 
 ## User Preferences
 
@@ -12,7 +12,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend Architecture
 
-CyberPulse uses a modern React-based frontend with the following key components:
+Security Operation Center uses a modern React-based frontend with the following key components:
 
 - **React**: Core library for building the UI
 - **Wouter**: Lightweight router for page navigation
