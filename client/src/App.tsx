@@ -42,6 +42,7 @@ import BeefXssPage from "@/pages/tool-detail/beef-xss";
 import Base64EncoderPage from "@/pages/tool-detail/base64-encoder";
 import JsonFormatterPage from "@/pages/tool-detail/json-formatter";
 import PayloadAllStarPage from "@/pages/tool-detail/payload-all-star";
+import PhoneDoxingPage from "@/pages/tool-detail/phone-doxing";
 import SecurityDashboardPage from "@/pages/security-dashboard";
 import ThreatMapPage from "@/pages/threat-map";
 import ScanHistory from "@/pages/scan-history";
@@ -90,6 +91,7 @@ function Router() {
           <Route path="/tools/base64-encoder" component={Base64EncoderPage} />
           <Route path="/tools/json-formatter" component={JsonFormatterPage} />
           <Route path="/tools/payload-all-star" component={PayloadAllStarPage} />
+          <Route path="/tools/phone-doxing" component={PhoneDoxingPage} />
           <Route path="/security-dashboard" component={SecurityDashboardPage} />
           <Route path="/threat-map" component={ThreatMapPage} />
           <Route path="/scan-history" component={ScanHistory} />
