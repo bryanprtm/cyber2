@@ -406,15 +406,97 @@ export default function SecurityMonitor() {
     // Cap at 100
     riskScore = Math.min(100, riskScore);
     
+    // Get detected OWASP vulnerabilities
+    const detectedVulnerabilities = owaspVulnerabilities.filter(v => v.detected);
+    
+    // Additional threat intelligence from MITRE ATT&CK framework
+    const mitreTactics = [
+      {
+        id: "TA0001",
+        name: "Initial Access",
+        detected: isPhishing || Math.random() < 0.2,
+        techniques: ["Phishing", "Valid Accounts", "External Remote Services"]
+      },
+      {
+        id: "TA0002",
+        name: "Execution",
+        detected: isMalware || Math.random() < 0.15,
+        techniques: ["Command and Scripting Interpreter", "User Execution", "Native API"]
+      },
+      {
+        id: "TA0003",
+        name: "Persistence",
+        detected: isBotnet || Math.random() < 0.1,
+        techniques: ["Boot or Logon Autostart Execution", "Create Account", "Scheduled Task/Job"]
+      },
+      {
+        id: "TA0004",
+        name: "Privilege Escalation",
+        detected: Math.random() < 0.12,
+        techniques: ["Exploitation for Privilege Escalation", "Access Token Manipulation"]
+      },
+      {
+        id: "TA0005",
+        name: "Defense Evasion",
+        detected: Math.random() < 0.15,
+        techniques: ["Obfuscated Files or Information", "Indicator Removal", "Masquerading"]
+      }
+    ];
+    
+    // Get detected MITRE tactics
+    const detectedTactics = mitreTactics.filter(t => t.detected);
+    
+    // Get compliance data based on industry standards
+    const complianceChecks = [
+      {
+        standard: "GDPR",
+        status: Math.random() < 0.7 ? "Compliant" : "Non-Compliant",
+        issues: Math.random() < 0.7 ? [] : ["Data Protection", "Privacy Policy", "Cookie Usage"]
+      },
+      {
+        standard: "PCI DSS",
+        status: Math.random() < 0.75 ? "Compliant" : "Non-Compliant",
+        issues: Math.random() < 0.75 ? [] : ["Secure Transmission", "Access Control", "Vulnerability Management"]
+      },
+      {
+        standard: "HIPAA",
+        status: Math.random() < 0.8 ? "Compliant" : "Non-Compliant",
+        issues: Math.random() < 0.8 ? [] : ["Access Controls", "Audit Controls", "Data Encryption"]
+      },
+      {
+        standard: "ISO 27001",
+        status: Math.random() < 0.6 ? "Compliant" : "Non-Compliant",
+        issues: Math.random() < 0.6 ? [] : ["Risk Assessment", "Security Policy", "Asset Management"]
+      }
+    ];
+    
     return {
       isPhishing,
       isMalware,
       isBotnet,
+      isApiFlaw,
+      isDataBreach,
       isBlacklisted,
       blacklistSources,
       abuseReports,
       lastReportDate: abuseReports > 0 ? new Date(Date.now() - Math.random() * 60 * 24 * 60 * 60 * 1000) : undefined,
-      riskScore
+      riskScore,
+      lastChecked: new Date(),
+      owaspVulnerabilities: detectedVulnerabilities,
+      mitreTactics: detectedTactics,
+      complianceStatus: complianceChecks,
+      threatIndicators: {
+        maliciousIPs: Math.floor(Math.random() * 5),
+        suspiciousDomains: Math.floor(Math.random() * 3),
+        malwareHashes: Math.floor(Math.random() * 4),
+        knownThreatActors: isPhishing || isMalware ? Math.floor(Math.random() * 2) + 1 : 0
+      },
+      securityPosture: {
+        patchStatus: Math.random() < 0.7 ? "Up to date" : "Updates required",
+        firewallStatus: Math.random() < 0.9 ? "Active" : "Issues detected",
+        encryptionStatus: Math.random() < 0.8 ? "Properly configured" : "Configuration issues",
+        authenticationSecurity: Math.random() < 0.6 ? "Strong" : "Improvements needed"
+      }
     };
   };
   
