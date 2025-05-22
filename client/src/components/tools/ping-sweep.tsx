@@ -369,6 +369,7 @@ export default function PingSweep({ onScanComplete }: PingSweepProps) {
   
   // Handle form submission
   const handleScan = () => {
+    // Determine which tab is active and get the input from the right field
     const targetInput = target || ipRange;
     
     if (!targetInput) {
@@ -377,10 +378,10 @@ export default function PingSweep({ onScanComplete }: PingSweepProps) {
       return;
     }
     
-    const parsedIps = parseIpRanges(targetInput);
-    if (parsedIps.length === 0) {
+    // Using a simpler validation approach to make it more robust
+    if (!isValidIP(targetInput) && !targetInput.includes('/') && !targetInput.includes('-') && !targetInput.includes('*')) {
       setError('Invalid IP address or range format');
-      addErrorLine('Invalid IP address or range format. Examples of valid formats: 192.168.0.1, 192.168.0.1-192.168.0.254, 192.168.0.0/24, 192.168.0.*');
+      addErrorLine('Invalid IP address or range format. Try examples like: 192.168.0.1, 192.168.0.1-254, 192.168.0.0/24');
       return;
     }
     
@@ -389,6 +390,30 @@ export default function PingSweep({ onScanComplete }: PingSweepProps) {
       addErrorLine('Not connected to tool server. Please try again.');
       return;
     }
+
+    // Start animation immediately to indicate activity
+    setIsScanning(true);
+    setScanProgress(0);
+    setResults([]);
+    setSummary(null);
+    setError(null);
+    
+    // Initialize scan statistics preemptively
+    setScanStats({
+      hostsScanned: 0,
+      hostsTotal: 1, // Will be updated when we get real data
+      startTime: Date.now(),
+      elapsedTime: "0s",
+      estimatedTimeRemaining: "Calculating...",
+      rate: 0
+    });
+    
+    // Add initial log entry
+    setActivityLog([{
+      message: `Starting ping sweep on ${targetInput}...`,
+      timestamp: new Date(),
+      type: 'info'
+    }]);
     
     // Send scan request via WebSocket
     const success = sendMessage('ping_sweep', {
@@ -399,8 +424,10 @@ export default function PingSweep({ onScanComplete }: PingSweepProps) {
       resolveHostnames
     });
     
-    if (success) {
-      setIsScanning(true);
+    if (!success) {
+      setIsScanning(false);
+      setError('Failed to send ping sweep request. Please try again.');
+      addErrorLine('Failed to send ping sweep request. Please try again.');
     }
   };
   
