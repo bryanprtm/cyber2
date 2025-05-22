@@ -1,6 +1,6 @@
 import React from 'react';
 import { Helmet } from 'react-helmet';
-import BasicWhoisLookup from '@/components/tools/basic-whois';
+import SuperSimpleWhois from '@/components/tools/super-simple-whois';
 import { Card } from '@/components/ui/card';
 import { Globe, Search, Shield } from 'lucide-react';
 
@@ -47,7 +47,7 @@ const WhoisLookupPage: React.FC = () => {
           </div>
         </div>
         
-        <BasicWhoisLookup />
+        <SuperSimpleWhois />
       </Card>
       
       <div className="mt-8 max-w-4xl mx-auto space-y-4 text-sm">
