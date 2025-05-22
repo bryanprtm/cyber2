@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Globe, Search, Shield, Server, Loader2, Calendar, User, Building, Mail } from 'lucide-react';
+import { i18n } from '@/lib/i18n';
+import { LanguageSelector } from '@/components/ui/language-selector';
 
 // Define the WHOIS result type
 interface WhoisResult {
@@ -32,19 +34,27 @@ const WhoisLookupPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   
   // Handle form submission
+  // Force UI update when language changes
+  const [, forceUpdate] = useState({});
+  useEffect(() => {
+    const handleLanguageChange = () => forceUpdate({});
+    window.addEventListener('languagechange', handleLanguageChange);
+    return () => window.removeEventListener('languagechange', handleLanguageChange);
+  }, []);
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate domain input
     if (!domain || domain.trim() === '') {
-      setError('Please enter a domain name');
+      setError(i18n.t('whois.error.empty'));
       return;
     }
     
     // Basic domain validation
     const domainRegex = /^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
     if (!domainRegex.test(domain)) {
-      setError('Invalid domain format. Example: example.com');
+      setError(i18n.t('whois.error.invalid'));
       return;
     }
     
@@ -146,13 +156,15 @@ const WhoisLookupPage: React.FC = () => {
       </div>
       
       <div className="mb-8 text-center">
+        <div className="flex justify-center mb-2">
+          <LanguageSelector />
+        </div>
         <div className="inline-flex items-center justify-center p-2 bg-primary/10 rounded-full mb-4">
           <Globe className="h-8 w-8 text-primary" />
         </div>
-        <h1 className="text-3xl font-bold font-tech text-primary mb-2">WHOIS Domain Lookup</h1>
+        <h1 className="text-3xl font-bold font-tech text-primary mb-2">{i18n.t('whois.title')}</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Discover who owns a domain, when it was registered, and when it expires. 
-          Our WHOIS lookup tool provides comprehensive registration data for any domain.
+          {i18n.t('whois.subtitle')}
         </p>
       </div>
       
@@ -161,31 +173,31 @@ const WhoisLookupPage: React.FC = () => {
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="domain">Domain Name</Label>
+            <Label htmlFor="domain">{i18n.t('whois.domain.label')}</Label>
             <div className="flex gap-2 flex-col sm:flex-row">
               <Input
                 id="domain"
                 value={domain}
                 onChange={(e) => setDomain(e.target.value)}
-                placeholder="example.com"
+                placeholder={i18n.t('whois.domain.placeholder')}
                 className="flex-1"
               />
               <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground hover:bg-primary/90">
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Loading...
+                    {i18n.t('whois.button.loading')}
                   </>
                 ) : (
                   <>
                     <Search className="mr-2 h-4 w-4" />
-                    Lookup
+                    {i18n.t('whois.button.lookup')}
                   </>
                 )}
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Enter a domain name without 'http://' or 'www'. Example: example.com
+              {i18n.t('whois.domain.hint')}
             </p>
           </div>
           
@@ -200,7 +212,7 @@ const WhoisLookupPage: React.FC = () => {
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="h-16 w-16 mx-auto rounded-full border-4 border-primary/30 border-t-primary animate-spin mb-4"></div>
-              <p className="text-muted-foreground">Retrieving WHOIS information for {domain}...</p>
+              <p className="text-muted-foreground">{i18n.t('whois.loading', { domain })}</p>
             </div>
           </div>
         )}
@@ -212,7 +224,7 @@ const WhoisLookupPage: React.FC = () => {
                 {results.domainName}
               </h2>
               <Badge className="bg-primary">
-                {getDomainAge(results.creationDate)} years old
+                {i18n.t('whois.result.age', { years: getDomainAge(results.creationDate) })}
               </Badge>
             </div>
             
@@ -221,17 +233,17 @@ const WhoisLookupPage: React.FC = () => {
                 <div>
                   <h3 className="text-lg font-semibold mb-2 flex items-center">
                     <Globe className="mr-2 h-5 w-5 text-primary" />
-                    Domain Information
+                    {i18n.t('whois.result.domainInfo')}
                   </h3>
                   <div className="space-y-2">
                     <div>
-                      <Label className="text-xs text-muted-foreground">Registrar</Label>
+                      <Label className="text-xs text-muted-foreground">{i18n.t('whois.result.registrar')}</Label>
                       <p>{results.registrar}</p>
                     </div>
                     
                     {results.registrarUrl && (
                       <div>
-                        <Label className="text-xs text-muted-foreground">Registrar URL</Label>
+                        <Label className="text-xs text-muted-foreground">{i18n.t('whois.result.registrarUrl')}</Label>
                         <p>
                           <a 
                             href={results.registrarUrl} 
@@ -246,7 +258,7 @@ const WhoisLookupPage: React.FC = () => {
                     )}
                     
                     <div>
-                      <Label className="text-xs text-muted-foreground">Status</Label>
+                      <Label className="text-xs text-muted-foreground">{i18n.t('whois.result.status')}</Label>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {results.status.map((status, i) => (
                           <Badge key={i} variant="outline" className="text-xs">
@@ -261,22 +273,22 @@ const WhoisLookupPage: React.FC = () => {
                 <div>
                   <h3 className="text-lg font-semibold mb-2 flex items-center">
                     <Calendar className="mr-2 h-5 w-5 text-primary" />
-                    Important Dates
+                    {i18n.t('whois.result.dates')}
                   </h3>
                   <div className="space-y-2">
                     <div>
-                      <Label className="text-xs text-muted-foreground">Creation Date</Label>
+                      <Label className="text-xs text-muted-foreground">{i18n.t('whois.result.creationDate')}</Label>
                       <p>{results.creationDate}</p>
                     </div>
                     
                     <div>
-                      <Label className="text-xs text-muted-foreground">Expiry Date</Label>
+                      <Label className="text-xs text-muted-foreground">{i18n.t('whois.result.expiryDate')}</Label>
                       <p>{results.expiryDate}</p>
                     </div>
                     
                     {results.updateDate && (
                       <div>
-                        <Label className="text-xs text-muted-foreground">Last Updated</Label>
+                        <Label className="text-xs text-muted-foreground">{i18n.t('whois.result.lastUpdated')}</Label>
                         <p>{results.updateDate}</p>
                       </div>
                     )}
@@ -289,26 +301,26 @@ const WhoisLookupPage: React.FC = () => {
                   <div>
                     <h3 className="text-lg font-semibold mb-2 flex items-center">
                       <Building className="mr-2 h-5 w-5 text-primary" />
-                      Registrant Information
+                      {i18n.t('whois.result.registrantInfo')}
                     </h3>
                     <div className="space-y-2">
                       {results.registrant.organization && (
                         <div>
-                          <Label className="text-xs text-muted-foreground">Organization</Label>
+                          <Label className="text-xs text-muted-foreground">{i18n.t('whois.result.organization')}</Label>
                           <p>{results.registrant.organization}</p>
                         </div>
                       )}
                       
                       {results.registrant.name && (
                         <div>
-                          <Label className="text-xs text-muted-foreground">Name</Label>
+                          <Label className="text-xs text-muted-foreground">{i18n.t('whois.result.name')}</Label>
                           <p>{results.registrant.name}</p>
                         </div>
                       )}
                       
                       {results.registrant.email && (
                         <div>
-                          <Label className="text-xs text-muted-foreground">Email</Label>
+                          <Label className="text-xs text-muted-foreground">{i18n.t('whois.result.email')}</Label>
                           <p className="flex items-center">
                             <Mail className="h-3 w-3 mr-1 text-muted-foreground" />
                             {results.registrant.email}
@@ -318,7 +330,7 @@ const WhoisLookupPage: React.FC = () => {
                       
                       {results.registrant.country && (
                         <div>
-                          <Label className="text-xs text-muted-foreground">Country</Label>
+                          <Label className="text-xs text-muted-foreground">{i18n.t('whois.result.country')}</Label>
                           <p>{results.registrant.country}</p>
                         </div>
                       )}
@@ -329,7 +341,7 @@ const WhoisLookupPage: React.FC = () => {
                 <div>
                   <h3 className="text-lg font-semibold mb-2 flex items-center">
                     <Server className="mr-2 h-5 w-5 text-primary" />
-                    Name Servers
+                    {i18n.t('whois.result.nameServers')}
                   </h3>
                   <div className="space-y-1">
                     {results.nameServers.map((ns, i) => (
