@@ -8,7 +8,9 @@ import { handleEmailHunting } from "./controllers/emailHunterController";
 import { handleShellUploaderAnalysis } from "./controllers/shellUploaderController";
 import { handleTechDetection } from "./controllers/techDetectorController";
 import { handlePasswordCheck } from "./controllers/passwordCheckerController";
+import { handleFileScanning } from "./controllers/fileScannerController";
 import { getAllTools, addTool, updateTool } from "./controllers/toolsController";
+import multer from "multer";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API Routes - all prefixed with /api
@@ -48,6 +50,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Password Checker API
   app.post("/api/security/password-checker", handlePasswordCheck);
+  
+  // File Scanner API - Uses multer for file upload handling
+  const upload = multer({ storage: multer.memoryStorage() });
+  app.post("/api/security/file-scanner", upload.single('file'), handleFileScanning);
   
   // Note: WHOIS Lookup API is now handled by the controller at line 82
   

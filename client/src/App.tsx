@@ -29,6 +29,7 @@ import EmailHunterPage from "@/pages/tool-detail/email-hunter";
 import ShellUploaderPage from "@/pages/tool-detail/shell-uploader";
 import TechDetectorPage from "@/pages/tool-detail/tech-detector";
 import PasswordCheckerPage from "@/pages/tool-detail/password-checker";
+import FileScannerPage from "@/pages/tool-detail/file-scanner";
 import ScanHistory from "@/pages/scan-history";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
@@ -63,6 +64,7 @@ function Router() {
           <Route path="/tools/shell-uploader" component={ShellUploaderPage} />
           <Route path="/tools/tech-detector" component={TechDetectorPage} />
           <Route path="/tools/password-checker" component={PasswordCheckerPage} />
+          <Route path="/tools/file-scanner" component={FileScannerPage} />
           <Route path="/scan-history" component={ScanHistory} />
           <Route component={NotFound} />
         </Switch>
