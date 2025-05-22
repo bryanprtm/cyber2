@@ -23,9 +23,9 @@ export default function Header() {
             <Link href="/">
               <div 
                 className="text-primary text-4xl font-tech text-glitch cursor-pointer" 
-                data-text="CyberPulse"
+                data-text="Security Operation Center"
               >
-                CyberPulse
+                Security Operation Center
               </div>
             </Link>
             <div className="ml-3 text-xs text-secondary font-mono mt-2">v1.0.3_alpha</div>

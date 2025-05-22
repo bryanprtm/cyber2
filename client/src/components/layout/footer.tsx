@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="mb-4 md:mb-0">
             <Link href="/">
-              <div className="text-primary text-2xl font-tech cursor-pointer">CyberPulse</div>
+              <div className="text-primary text-2xl font-tech cursor-pointer">Security Operation Center</div>
             </Link>
             <p className="text-xs font-mono text-muted-foreground mt-1">Advanced Cybersecurity Toolkit</p>
           </div>
