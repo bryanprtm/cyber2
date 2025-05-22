@@ -198,6 +198,21 @@
   50% { text-shadow: 0 0 20px rgba(0, 255, 65, 1); }
 }
 
+@keyframes scanning {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(5px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 .glow-text {
   animation: pulse-glow 2s infinite;
 }

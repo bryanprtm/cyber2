@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useWebSocket } from '@/hooks/use-websocket';
 import { useTerminal } from '@/hooks/use-terminal';
 import { Card } from '@/components/ui/card';
@@ -19,7 +19,9 @@ import {
   Network,
   Radio,
   Save,
-  Wifi
+  Wifi,
+  Loader2,
+  Signal
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -601,10 +603,15 @@ export default function PingSweep({ onScanComplete }: PingSweepProps) {
       
       {/* Scan Progress Section */}
       {isScanning && (
-        <Card className="p-4 border-primary/30 bg-card">
-          <div className="flex justify-between items-center mb-4">
+        <Card className="p-4 border-primary/30 bg-card relative">
+          {/* Animated scanning pulse overlay */}
+          <div className="absolute inset-0 bg-primary/5 border border-primary/30 rounded-lg overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent -translate-x-full animate-[scanning_2s_ease-in-out_infinite]"></div>
+          </div>
+          
+          <div className="flex justify-between items-center mb-4 relative z-10">
             <h3 className="text-lg font-tech text-primary flex items-center">
-              <Network className="h-4 w-4 mr-2" />
+              <Signal className="h-4 w-4 mr-2 animate-pulse" />
               Sweep Progress
             </h3>
             <div className="text-xs font-mono flex items-center gap-2">
@@ -613,56 +620,70 @@ export default function PingSweep({ onScanComplete }: PingSweepProps) {
                 {scanStats.elapsedTime}
               </Badge>
               <Badge variant="outline" className="bg-secondary/10 text-secondary">
-                <Radio className="h-3 w-3 mr-1" />
+                <Radio className="h-3 w-3 mr-1 animate-ping" />
                 {scanStats.rate} hosts/sec
               </Badge>
             </div>
           </div>
           
-          <div className="space-y-4">
+          <div className="space-y-4 relative z-10">
             <div className="space-y-2">
               <div className="flex justify-between text-xs font-mono">
-                <span>Scanning hosts... {scanProgress}%</span>
-                <span>{scanStats.hostsScanned} / {scanStats.hostsTotal} hosts</span>
+                <span className="flex items-center">
+                  <Loader2 className="h-3 w-3 mr-1.5 animate-spin text-primary" />
+                  Scanning hosts... {scanProgress}%
+                </span>
+                <span className="font-bold text-primary">{scanStats.hostsScanned} / {scanStats.hostsTotal} hosts</span>
               </div>
-              <Progress value={scanProgress} className="h-2" />
+              <div className="relative h-2 w-full bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-300"
+                  style={{ width: `${scanProgress}%` }}
+                ></div>
+                <div className="absolute top-0 left-0 h-full w-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[scanning_1.5s_ease-in-out_infinite]"></div>
+              </div>
               <div className="flex justify-between text-xs font-mono text-muted-foreground">
                 <span>ETA: {scanStats.estimatedTimeRemaining}</span>
-                <span>Target: {target || ipRange}</span>
+                <span>Target: <span className="text-primary">{target || ipRange}</span></span>
               </div>
             </div>
             
-            <div className="border border-border rounded-md">
+            <div className="border border-border rounded-md bg-card/80">
               <div className="bg-muted p-2 flex justify-between items-center font-tech text-xs border-b border-border">
-                <div>Activity Log</div>
                 <div className="flex items-center">
-                  <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse mr-2"></div>
+                  <Network className="h-3.5 w-3.5 mr-1.5 text-primary" />
+                  Activity Log
+                </div>
+                <div className="flex items-center">
+                  <div className="h-2 w-2 rounded-full bg-green-500 animate-[pulse_1s_ease-in-out_infinite] mr-2"></div>
                   <span>Live</span>
                 </div>
               </div>
               
-              <div className="max-h-48 overflow-y-auto p-2 space-y-1 bg-black/30">
+              <div className="max-h-48 overflow-y-auto p-2 space-y-1 bg-black/30 overflow-x-hidden">
                 {activityLog.map((entry, index) => (
                   <div 
                     key={index} 
                     className={cn(
                       "text-xs font-mono flex items-start p-1 rounded",
-                      entry.type === 'success' && "text-green-400",
-                      entry.type === 'error' && "text-red-400",
-                      entry.type === 'warning' && "text-yellow-400",
-                      entry.type === 'info' && "text-blue-400",
+                      "animate-[fadeIn_0.3s_ease-out]",
+                      entry.type === 'success' && "text-green-400 border-l-2 border-green-500 pl-2",
+                      entry.type === 'error' && "text-red-400 border-l-2 border-red-500 pl-2",
+                      entry.type === 'warning' && "text-yellow-400 border-l-2 border-yellow-500 pl-2",
+                      entry.type === 'info' && "text-blue-400 border-l-2 border-blue-500 pl-2",
                       entry.type === 'progress' && "text-muted-foreground"
                     )}
                   >
-                    <span className="opacity-70 mr-2 flex-shrink-0">
+                    <span className="opacity-70 mr-2 flex-shrink-0 text-xs">
                       {entry.timestamp.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'})}
                     </span>
                     <span>{entry.message}</span>
                   </div>
                 ))}
                 {activityLog.length === 0 && (
-                  <div className="text-xs font-mono text-muted-foreground p-2">
-                    No activity yet. Waiting for scan to start...
+                  <div className="text-xs font-mono text-muted-foreground p-2 flex items-center justify-center">
+                    <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                    Initializing scan, please wait...
                   </div>
                 )}
               </div>
