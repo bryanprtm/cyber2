@@ -24,6 +24,7 @@ import SubnetCalculatorPage from "@/pages/tool-detail/subnet-calculator";
 import PacketAnalyzerPage from "@/pages/tool-detail/packet-analyzer";
 
 import MetadataExtractorPage from "@/pages/tool-detail/metadata-extractor";
+import HeaderAnalyzerPage from "@/pages/tool-detail/header-analyzer";
 import ScanHistory from "@/pages/scan-history";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
@@ -53,6 +54,7 @@ function Router() {
           <Route path="/tools/subnet-calculator" component={SubnetCalculatorPage} />
           <Route path="/tools/packet-analyzer" component={PacketAnalyzerPage} />
           <Route path="/tools/metadata-extractor" component={MetadataExtractorPage} />
+          <Route path="/tools/header-analyzer" component={HeaderAnalyzerPage} />
           <Route path="/scan-history" component={ScanHistory} />
           <Route component={NotFound} />
         </Switch>
