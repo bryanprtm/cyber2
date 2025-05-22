@@ -111,7 +111,7 @@ export default function EmailHunterPage() {
         
         if (emailAddresses.length > 0) {
           addSuccessLine(`Found ${emailAddresses.length} email addresses`);
-          emailAddresses.slice(0, 5).forEach(email => {
+          emailAddresses.slice(0, 5).forEach((email: string) => {
             addInfoLine(`Email: ${email}`);
           });
           if (emailAddresses.length > 5) {
@@ -301,7 +301,7 @@ export default function EmailHunterPage() {
                       
                       <ScrollArea className="h-[300px] rounded-md border p-4">
                         <ul className="space-y-2">
-                          {results.emailAddresses.map((email, index) => (
+                          {results.emailAddresses.map((email: string, index) => (
                             <li key={index} className="flex items-center p-2 hover:bg-accent/50 rounded-md">
                               <AtSign className="h-4 w-4 mr-2 text-primary" />
                               <span className="font-mono">{email}</span>
