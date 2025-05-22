@@ -146,6 +146,89 @@ interface ThreatIntelligence {
     encryptionStatus: string;
     authenticationSecurity: string;
   };
+  // IP Information (detailed)
+  ipInfo?: {
+    address: string;
+    geolocation: {
+      country: string;
+      countryCode: string;
+      region: string;
+      city: string;
+      latitude: number;
+      longitude: number;
+      isp: string;
+      org: string;
+      as: string;
+    };
+    reputation: {
+      score: number; // 0-100, higher is worse
+      categories: string[]; // e.g. ["spam", "malware distribution", "botnet"]
+      firstReported?: Date;
+      lastReported?: Date;
+      reportCount: number;
+    };
+    ports: {
+      open: number[];
+      filtered: number[];
+      services: Array<{
+        port: number;
+        protocol: string;
+        service: string;
+        version?: string;
+      }>;
+    };
+    activity: {
+      lastSeen: Date;
+      firstSeen: Date;
+      recentEvents: Array<{
+        date: Date;
+        type: string;
+        description: string;
+        severity: "low" | "medium" | "high" | "critical";
+      }>;
+    };
+  };
+  // Network monitoring data
+  networkMonitoring?: {
+    trafficAnalysis: {
+      incomingTraffic: number; // in MB
+      outgoingTraffic: number; // in MB
+      anomalies: boolean;
+      peakTimeUtc?: Date;
+      unusualConnections: number;
+    };
+    dnsActivity: {
+      totalQueries: number;
+      maliciousQueries: number;
+      suspiciousDomains: string[];
+    };
+    packetLoss: number; // percentage
+    latency: number; // in ms
+    bandwidthUtilization: number; // percentage
+  };
+  // Vulnerability scanning data
+  vulnerabilityScanning?: {
+    lastScan: Date;
+    vulnerabilityTrends: Array<{
+      date: Date;
+      critical: number;
+      high: number;
+      medium: number;
+      low: number;
+    }>;
+    topVulnerableAssets: Array<{
+      assetName: string;
+      vulnerabilityCount: number;
+      criticalCount: number;
+      highCount: number;
+    }>;
+    remediationStatus: {
+      fixed: number;
+      inProgress: number;
+      notStarted: number;
+      total: number;
+    };
+  };
 }
 
 interface SecurityRecommendation {
@@ -470,6 +553,88 @@ export default function SecurityMonitor() {
       }
     ];
     
+    // Generate IP Information (used when target is an IP address)
+    const ipCountries = ["United States", "China", "Russia", "Germany", "Brazil", "India", "United Kingdom", "Japan", "Canada", "France"];
+    const ipCountryCodes = ["US", "CN", "RU", "DE", "BR", "IN", "GB", "JP", "CA", "FR"];
+    const ipISPs = ["Comcast", "AT&T", "Verizon", "Deutsche Telekom", "China Telecom", "NTT Communications", "BT Group", "Orange S.A.", "Telefónica", "Vodafone"];
+    const ipAS = ["AS15169 Google LLC", "AS16509 Amazon.com", "AS8075 Microsoft", "AS2914 NTT Ltd.", "AS3356 Level 3", "AS6939 Hurricane Electric", "AS4837 China Unicom", "AS3320 Deutsche Telekom", "AS5511 Orange S.A.", "AS6461 Zayo"];
+    const ipServices = ["HTTP", "HTTPS", "SSH", "FTP", "SMTP", "DNS", "RDP", "SMB", "Telnet", "MySQL"];
+    const ipProtocols = ["TCP", "UDP", "ICMP"];
+    const ipEventTypes = ["Connection Attempt", "Port Scan", "Login Attempt", "Data Transfer", "Suspicious Activity"];
+    
+    // Generate random IP information
+    const randomCountryIndex = Math.floor(Math.random() * ipCountries.length);
+    const ipAddress = target || `${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`;
+    
+    // Generate random ports
+    const openPorts = [];
+    const portServices = [];
+    const numOpenPorts = Math.floor(Math.random() * 5) + 1;
+    const commonPorts = [21, 22, 25, 53, 80, 443, 3306, 3389, 8080, 8443];
+    
+    for (let i = 0; i < numOpenPorts; i++) {
+      const port = commonPorts[Math.floor(Math.random() * commonPorts.length)];
+      if (!openPorts.includes(port)) {
+        openPorts.push(port);
+        portServices.push({
+          port,
+          protocol: ipProtocols[Math.floor(Math.random() * ipProtocols.length)],
+          service: ipServices[Math.floor(Math.random() * ipServices.length)],
+          version: Math.random() > 0.5 ? `v${Math.floor(Math.random() * 10) + 1}.${Math.floor(Math.random() * 10)}` : undefined
+        });
+      }
+    }
+    
+    // Generate recent events
+    const recentEvents = [];
+    const numEvents = Math.floor(Math.random() * 5) + 1;
+    const severities: ("low" | "medium" | "high" | "critical")[] = ["low", "medium", "high", "critical"];
+    
+    for (let i = 0; i < numEvents; i++) {
+      recentEvents.push({
+        date: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000), // Within the last week
+        type: ipEventTypes[Math.floor(Math.random() * ipEventTypes.length)],
+        description: `Detected ${ipEventTypes[Math.floor(Math.random() * ipEventTypes.length)].toLowerCase()} from ${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`,
+        severity: severities[Math.floor(Math.random() * severities.length)]
+      });
+    }
+    
+    // Sort events by date (most recent first)
+    recentEvents.sort((a, b) => b.date.getTime() - a.date.getTime());
+    
+    // Generate vulnerability trends
+    const vulnerabilityTrends = [];
+    const today = new Date();
+    
+    for (let i = 30; i >= 0; i -= 5) { // Generate data for the last 30 days in 5-day increments
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      
+      vulnerabilityTrends.push({
+        date,
+        critical: Math.floor(Math.random() * 3),
+        high: Math.floor(Math.random() * 5),
+        medium: Math.floor(Math.random() * 8),
+        low: Math.floor(Math.random() * 12)
+      });
+    }
+    
+    // Generate top vulnerable assets
+    const assets = ["Web Server", "Database", "Email Server", "File Server", "User Workstation", "Admin Console", "API Gateway"];
+    const topVulnerableAssets = [];
+    
+    for (let i = 0; i < 3; i++) {
+      const vulnerabilityCount = Math.floor(Math.random() * 15) + 1;
+      const criticalCount = Math.floor(Math.random() * 3);
+      
+      topVulnerableAssets.push({
+        assetName: assets[Math.floor(Math.random() * assets.length)],
+        vulnerabilityCount,
+        criticalCount,
+        highCount: Math.floor(Math.random() * (vulnerabilityCount - criticalCount))
+      });
+    }
+    
     return {
       isPhishing,
       isMalware,
@@ -496,6 +661,68 @@ export default function SecurityMonitor() {
         firewallStatus: Math.random() < 0.9 ? "Active" : "Issues detected",
         encryptionStatus: Math.random() < 0.8 ? "Properly configured" : "Configuration issues",
         authenticationSecurity: Math.random() < 0.6 ? "Strong" : "Improvements needed"
+      },
+      // Add IP Information
+      ipInfo: {
+        address: ipAddress,
+        geolocation: {
+          country: ipCountries[randomCountryIndex],
+          countryCode: ipCountryCodes[randomCountryIndex],
+          region: `Region-${Math.floor(Math.random() * 20) + 1}`,
+          city: `City-${Math.floor(Math.random() * 50) + 1}`,
+          latitude: (Math.random() * 180) - 90,
+          longitude: (Math.random() * 360) - 180,
+          isp: ipISPs[Math.floor(Math.random() * ipISPs.length)],
+          org: `Organization-${Math.floor(Math.random() * 10) + 1}`,
+          as: ipAS[Math.floor(Math.random() * ipAS.length)]
+        },
+        reputation: {
+          score: Math.floor(Math.random() * 100),
+          categories: isBlacklisted ? ["spam", "malware distribution", "botnet"].slice(0, Math.floor(Math.random() * 3) + 1) : [],
+          firstReported: isBlacklisted ? new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000) : undefined,
+          lastReported: isBlacklisted ? new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000) : undefined,
+          reportCount: isBlacklisted ? Math.floor(Math.random() * 20) + 1 : 0
+        },
+        ports: {
+          open: openPorts,
+          filtered: [25, 110, 135, 445].filter(p => !openPorts.includes(p)),
+          services: portServices
+        },
+        activity: {
+          lastSeen: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000),
+          firstSeen: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000),
+          recentEvents
+        }
+      },
+      // Add Network Monitoring data
+      networkMonitoring: {
+        trafficAnalysis: {
+          incomingTraffic: Math.floor(Math.random() * 1000),
+          outgoingTraffic: Math.floor(Math.random() * 800),
+          anomalies: Math.random() < 0.2,
+          peakTimeUtc: new Date(new Date().setUTCHours(Math.floor(Math.random() * 24), 0, 0, 0)),
+          unusualConnections: Math.floor(Math.random() * 5)
+        },
+        dnsActivity: {
+          totalQueries: Math.floor(Math.random() * 10000) + 1000,
+          maliciousQueries: Math.floor(Math.random() * 50),
+          suspiciousDomains: isBlacklisted ? ["suspicious-domain1.com", "malware-site2.net", "phishing3.org"].slice(0, Math.floor(Math.random() * 3) + 1) : []
+        },
+        packetLoss: Math.random() * 5,
+        latency: Math.floor(Math.random() * 200) + 10,
+        bandwidthUtilization: Math.floor(Math.random() * 100)
+      },
+      // Add Vulnerability Scanning data
+      vulnerabilityScanning: {
+        lastScan: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
+        vulnerabilityTrends,
+        topVulnerableAssets,
+        remediationStatus: {
+          fixed: Math.floor(Math.random() * 20),
+          inProgress: Math.floor(Math.random() * 15),
+          notStarted: Math.floor(Math.random() * 10),
+          total: Math.floor(Math.random() * 45) + 5
+        }
       }
     };
   };
@@ -1392,9 +1619,9 @@ export default function SecurityMonitor() {
                   <TabsTrigger value="dashboard" className="font-tech">Dashboard</TabsTrigger>
                   <TabsTrigger value="vulnerabilities" className="font-tech">Vulnerabilities</TabsTrigger>
                   <TabsTrigger value="threat-intel" className="font-tech">Threat Intel</TabsTrigger>
+                  <TabsTrigger value="ip-info" className="font-tech">IP Info</TabsTrigger>
+                  <TabsTrigger value="network" className="font-tech">Network</TabsTrigger>
                   <TabsTrigger value="recommendations" className="font-tech">Recommendations</TabsTrigger>
-                  <TabsTrigger value="visualizations" className="font-tech">Visualizations</TabsTrigger>
-                  <TabsTrigger value="analysis" className="font-tech">Analysis</TabsTrigger>
                 </TabsList>
                 
                 {/* Dashboard Tab */}
@@ -2076,6 +2303,426 @@ export default function SecurityMonitor() {
                 </TabsContent>
                 
                 {/* Security Recommendations Tab */}
+                {/* IP Information Tab */}
+                <TabsContent value="ip-info" className="space-y-6">
+                  <Card className="p-4 bg-card/80 border-primary/30">
+                    <h3 className="font-tech text-primary mb-4">🔎 IP Information</h3>
+                    
+                    {threatIntelligence && threatIntelligence.ipInfo ? (
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {/* Geolocation Card */}
+                          <Card className="p-4 border-border">
+                            <h4 className="text-sm font-semibold flex items-center mb-3">
+                              <Globe className="h-4 w-4 mr-2 text-primary" />
+                              Geolocation
+                            </h4>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">IP Address:</span>
+                                <span className="font-mono font-medium">{threatIntelligence.ipInfo.address}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Country:</span>
+                                <span className="font-medium">{threatIntelligence.ipInfo.geolocation.country} ({threatIntelligence.ipInfo.geolocation.countryCode})</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Region/City:</span>
+                                <span className="font-medium">{threatIntelligence.ipInfo.geolocation.region}, {threatIntelligence.ipInfo.geolocation.city}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">ISP:</span>
+                                <span className="font-medium">{threatIntelligence.ipInfo.geolocation.isp}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Organization:</span>
+                                <span className="font-medium">{threatIntelligence.ipInfo.geolocation.org}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">ASN:</span>
+                                <span className="font-medium">{threatIntelligence.ipInfo.geolocation.as}</span>
+                              </div>
+                            </div>
+                          </Card>
+
+                          {/* Reputation Card */}
+                          <Card className="p-4 border-border">
+                            <h4 className="text-sm font-semibold flex items-center mb-3">
+                              <Shield className="h-4 w-4 mr-2 text-primary" />
+                              Reputation
+                            </h4>
+                            <div className="mb-3">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-muted-foreground">Reputation Score:</span>
+                                <span className={`text-sm font-semibold ${
+                                  threatIntelligence.ipInfo.reputation.score > 75 ? "text-red-500" :
+                                  threatIntelligence.ipInfo.reputation.score > 50 ? "text-orange-500" :
+                                  threatIntelligence.ipInfo.reputation.score > 25 ? "text-yellow-500" :
+                                  "text-green-500"
+                                }`}>
+                                  {threatIntelligence.ipInfo.reputation.score}/100
+                                </span>
+                              </div>
+                              <div className="w-full bg-background h-2 rounded-full mt-1 overflow-hidden">
+                                <div
+                                  className={`h-full ${
+                                    threatIntelligence.ipInfo.reputation.score > 75 ? "bg-red-500" :
+                                    threatIntelligence.ipInfo.reputation.score > 50 ? "bg-orange-500" :
+                                    threatIntelligence.ipInfo.reputation.score > 25 ? "bg-yellow-500" :
+                                    "bg-green-500"
+                                  }`}
+                                  style={{ width: `${threatIntelligence.ipInfo.reputation.score}%` }}
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2 text-sm">
+                              {threatIntelligence.ipInfo.reputation.categories.length > 0 ? (
+                                <div>
+                                  <span className="text-muted-foreground">Flagged Categories:</span>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {threatIntelligence.ipInfo.reputation.categories.map((category, index) => (
+                                      <span key={index} className="px-2 py-0.5 bg-red-500/10 text-red-500 text-xs rounded-full">
+                                        {category}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-green-500 font-medium">No negative reputation</div>
+                              )}
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Report Count:</span>
+                                <span className="font-medium">{threatIntelligence.ipInfo.reputation.reportCount}</span>
+                              </div>
+                              {threatIntelligence.ipInfo.reputation.firstReported && (
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">First Reported:</span>
+                                  <span className="font-medium">{threatIntelligence.ipInfo.reputation.firstReported.toLocaleDateString()}</span>
+                                </div>
+                              )}
+                              {threatIntelligence.ipInfo.reputation.lastReported && (
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Last Reported:</span>
+                                  <span className="font-medium">{threatIntelligence.ipInfo.reputation.lastReported.toLocaleDateString()}</span>
+                                </div>
+                              )}
+                            </div>
+                          </Card>
+
+                          {/* Activity Card */}
+                          <Card className="p-4 border-border">
+                            <h4 className="text-sm font-semibold flex items-center mb-3">
+                              <Activity className="h-4 w-4 mr-2 text-primary" />
+                              Activity Timeline
+                            </h4>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">First Seen:</span>
+                                <span className="font-medium">{threatIntelligence.ipInfo.activity.firstSeen.toLocaleDateString()}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Last Seen:</span>
+                                <span className="font-medium">{threatIntelligence.ipInfo.activity.lastSeen.toLocaleDateString()}</span>
+                              </div>
+                              <div className="mt-2">
+                                <span className="text-muted-foreground">Recent Events:</span>
+                                <div className="mt-2 space-y-2">
+                                  {threatIntelligence.ipInfo.activity.recentEvents.map((event, index) => (
+                                    <div key={index} className={`p-2 text-xs rounded-md ${
+                                      event.severity === 'critical' ? 'bg-red-500/10 border-red-500/30' :
+                                      event.severity === 'high' ? 'bg-orange-500/10 border-orange-500/30' :
+                                      event.severity === 'medium' ? 'bg-yellow-500/10 border-yellow-500/30' :
+                                      'bg-blue-500/10 border-blue-500/30'
+                                    } border`}>
+                                      <div className="flex justify-between items-center mb-1">
+                                        <span className="font-medium">{event.type}</span>
+                                        <span className={`${
+                                          event.severity === 'critical' ? 'text-red-500' :
+                                          event.severity === 'high' ? 'text-orange-500' :
+                                          event.severity === 'medium' ? 'text-yellow-500' :
+                                          'text-blue-500'
+                                        } uppercase text-[10px] font-bold`}>
+                                          {event.severity}
+                                        </span>
+                                      </div>
+                                      <p className="text-muted-foreground">{event.description}</p>
+                                      <div className="text-[10px] text-muted-foreground mt-1">
+                                        {event.date.toLocaleString()}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        </div>
+
+                        {/* Ports and Services */}
+                        <Card className="p-4 border-border">
+                          <h4 className="text-sm font-semibold flex items-center mb-3">
+                            <Server className="h-4 w-4 mr-2 text-primary" />
+                            Ports and Services
+                          </h4>
+                          <div className="overflow-x-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Port</TableHead>
+                                  <TableHead>Protocol</TableHead>
+                                  <TableHead>Service</TableHead>
+                                  <TableHead>Version</TableHead>
+                                  <TableHead>Status</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {threatIntelligence.ipInfo.ports.services.map((service, index) => (
+                                  <TableRow key={index}>
+                                    <TableCell className="font-mono">{service.port}</TableCell>
+                                    <TableCell>{service.protocol}</TableCell>
+                                    <TableCell>{service.service}</TableCell>
+                                    <TableCell>{service.version || 'Unknown'}</TableCell>
+                                    <TableCell>
+                                      <span className="px-2 py-0.5 bg-green-500/10 text-green-500 text-xs rounded-full">
+                                        Open
+                                      </span>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                                {threatIntelligence.ipInfo.ports.filtered.map((port, index) => (
+                                  <TableRow key={`filtered-${index}`}>
+                                    <TableCell className="font-mono">{port}</TableCell>
+                                    <TableCell>-</TableCell>
+                                    <TableCell>-</TableCell>
+                                    <TableCell>-</TableCell>
+                                    <TableCell>
+                                      <span className="px-2 py-0.5 bg-yellow-500/10 text-yellow-500 text-xs rounded-full">
+                                        Filtered
+                                      </span>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </Card>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+                          <Globe className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <h3 className="text-lg font-semibold mb-2">No IP Information Available</h3>
+                        <p className="text-muted-foreground text-sm max-w-md mx-auto">
+                          Enter a target IP address and click "Scan Target" to generate 
+                          detailed IP information and network analysis.
+                        </p>
+                      </div>
+                    )}
+                  </Card>
+                </TabsContent>
+                
+                {/* Network Monitoring Tab */}
+                <TabsContent value="network" className="space-y-6">
+                  <Card className="p-4 bg-card/80 border-accent/30">
+                    <h3 className="font-tech text-accent mb-4">📊 Network Monitoring</h3>
+                    
+                    {threatIntelligence && threatIntelligence.networkMonitoring ? (
+                      <div className="space-y-6">
+                        {/* Traffic Analysis */}
+                        <Card className="p-4 border-border">
+                          <h4 className="text-sm font-semibold flex items-center mb-3">
+                            <Network className="h-4 w-4 mr-2 text-accent" />
+                            Traffic Analysis
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                            <div className="p-3 bg-background rounded-md">
+                              <div className="text-xs text-muted-foreground mb-1">Incoming Traffic</div>
+                              <div className="text-xl font-bold font-mono">{threatIntelligence.networkMonitoring.trafficAnalysis.incomingTraffic} MB</div>
+                            </div>
+                            <div className="p-3 bg-background rounded-md">
+                              <div className="text-xs text-muted-foreground mb-1">Outgoing Traffic</div>
+                              <div className="text-xl font-bold font-mono">{threatIntelligence.networkMonitoring.trafficAnalysis.outgoingTraffic} MB</div>
+                            </div>
+                            <div className="p-3 bg-background rounded-md">
+                              <div className="text-xs text-muted-foreground mb-1">Bandwidth Utilization</div>
+                              <div className="text-xl font-bold font-mono">{threatIntelligence.networkMonitoring.bandwidthUtilization}%</div>
+                            </div>
+                            <div className="p-3 bg-background rounded-md">
+                              <div className="text-xs text-muted-foreground mb-1">Network Latency</div>
+                              <div className="text-xl font-bold font-mono">{threatIntelligence.networkMonitoring.latency} ms</div>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <h5 className="text-xs font-medium mb-2">Traffic Anomalies</h5>
+                              <div className={`p-3 rounded-md ${
+                                threatIntelligence.networkMonitoring.trafficAnalysis.anomalies
+                                ? 'bg-red-500/10 border-red-500/30 text-red-500'
+                                : 'bg-green-500/10 border-green-500/30 text-green-500'
+                              } border text-sm`}>
+                                {threatIntelligence.networkMonitoring.trafficAnalysis.anomalies
+                                  ? 'Traffic anomalies detected'
+                                  : 'No traffic anomalies detected'}
+                              </div>
+                              {threatIntelligence.networkMonitoring.trafficAnalysis.anomalies && (
+                                <div className="mt-2 text-xs text-muted-foreground">
+                                  Unusual traffic patterns detected. {threatIntelligence.networkMonitoring.trafficAnalysis.unusualConnections} suspicious connections identified.
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <h5 className="text-xs font-medium mb-2">Network Health</h5>
+                              <div className="space-y-2">
+                                <div>
+                                  <div className="flex justify-between text-xs mb-1">
+                                    <span>Packet Loss:</span>
+                                    <span className={`font-medium ${
+                                      threatIntelligence.networkMonitoring.packetLoss > 2 ? 'text-red-500' : 
+                                      threatIntelligence.networkMonitoring.packetLoss > 0.5 ? 'text-yellow-500' : 
+                                      'text-green-500'
+                                    }`}>
+                                      {threatIntelligence.networkMonitoring.packetLoss.toFixed(1)}%
+                                    </span>
+                                  </div>
+                                  <div className="w-full bg-background h-1.5 rounded-full overflow-hidden">
+                                    <div 
+                                      className={`h-full ${
+                                        threatIntelligence.networkMonitoring.packetLoss > 2 ? 'bg-red-500' : 
+                                        threatIntelligence.networkMonitoring.packetLoss > 0.5 ? 'bg-yellow-500' : 
+                                        'bg-green-500'
+                                      }`}
+                                      style={{ width: `${Math.min(threatIntelligence.networkMonitoring.packetLoss * 10, 100)}%` }}
+                                    />
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="flex justify-between text-xs mb-1">
+                                    <span>Peak Time (UTC):</span>
+                                    <span className="font-medium">
+                                      {threatIntelligence.networkMonitoring.trafficAnalysis.peakTimeUtc?.toLocaleTimeString()}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                        
+                        {/* DNS Activity */}
+                        <Card className="p-4 border-border">
+                          <h4 className="text-sm font-semibold flex items-center mb-3">
+                            <Database className="h-4 w-4 mr-2 text-accent" />
+                            DNS Activity
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div className="p-3 bg-background rounded-md">
+                              <div className="text-xs text-muted-foreground mb-1">Total DNS Queries</div>
+                              <div className="text-xl font-bold font-mono">{threatIntelligence.networkMonitoring.dnsActivity.totalQueries.toLocaleString()}</div>
+                            </div>
+                            <div className="p-3 bg-background rounded-md">
+                              <div className="text-xs text-muted-foreground mb-1">Malicious Queries</div>
+                              <div className="text-xl font-bold font-mono">{threatIntelligence.networkMonitoring.dnsActivity.maliciousQueries}</div>
+                            </div>
+                            <div className="p-3 bg-background rounded-md">
+                              <div className="text-xs text-muted-foreground mb-1">Malicious Query Ratio</div>
+                              <div className="text-xl font-bold font-mono">
+                                {(threatIntelligence.networkMonitoring.dnsActivity.maliciousQueries / threatIntelligence.networkMonitoring.dnsActivity.totalQueries * 100).toFixed(2)}%
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {threatIntelligence.networkMonitoring.dnsActivity.suspiciousDomains.length > 0 && (
+                            <div>
+                              <h5 className="text-xs font-medium mb-2">Suspicious Domains</h5>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                {threatIntelligence.networkMonitoring.dnsActivity.suspiciousDomains.map((domain, index) => (
+                                  <div key={index} className="p-2 bg-red-500/10 border border-red-500/30 rounded-md text-xs flex items-center">
+                                    <AlertCircle className="h-3 w-3 mr-2 text-red-500" />
+                                    <span>{domain}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </Card>
+                        
+                        {/* Vulnerability Scanning Trends */}
+                        {threatIntelligence.vulnerabilityScanning && (
+                          <Card className="p-4 border-border">
+                            <h4 className="text-sm font-semibold flex items-center mb-3">
+                              <BarChart className="h-4 w-4 mr-2 text-accent" />
+                              Vulnerability Scanning Trends
+                            </h4>
+                            
+                            <div className="space-y-4">
+                              <div>
+                                <div className="flex justify-between items-center mb-2">
+                                  <span className="text-xs text-muted-foreground">Last Scan:</span>
+                                  <span className="text-xs font-medium">
+                                    {threatIntelligence.vulnerabilityScanning.lastScan.toLocaleString()}
+                                  </span>
+                                </div>
+                                
+                                <div className="flex justify-between items-center mb-2">
+                                  <span className="text-xs font-medium">Remediation Status:</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs flex items-center">
+                                      <span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span>
+                                      Fixed: {threatIntelligence.vulnerabilityScanning.remediationStatus.fixed}
+                                    </span>
+                                    <span className="text-xs flex items-center">
+                                      <span className="w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>
+                                      In Progress: {threatIntelligence.vulnerabilityScanning.remediationStatus.inProgress}
+                                    </span>
+                                    <span className="text-xs flex items-center">
+                                      <span className="w-2 h-2 rounded-full bg-red-500 mr-1"></span>
+                                      Not Started: {threatIntelligence.vulnerabilityScanning.remediationStatus.notStarted}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <h5 className="text-xs font-medium mb-2">Top Vulnerable Assets</h5>
+                                <div className="space-y-2">
+                                  {threatIntelligence.vulnerabilityScanning.topVulnerableAssets.map((asset, index) => (
+                                    <div key={index} className="p-2 bg-background rounded-md">
+                                      <div className="flex justify-between items-center mb-1">
+                                        <span className="text-xs font-medium">{asset.assetName}</span>
+                                        <span className="text-xs">{asset.vulnerabilityCount} issues</span>
+                                      </div>
+                                      <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
+                                        <div className="h-full bg-red-500" style={{ width: `${Math.min(asset.criticalCount / asset.vulnerabilityCount * 100, 100)}%` }} />
+                                      </div>
+                                      <div className="flex justify-between mt-1 text-[10px] text-muted-foreground">
+                                        <span>Critical: {asset.criticalCount}</span>
+                                        <span>High: {asset.highCount}</span>
+                                        <span>Other: {asset.vulnerabilityCount - asset.criticalCount - asset.highCount}</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+                          <Network className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <h3 className="text-lg font-semibold mb-2">No Network Monitoring Data</h3>
+                        <p className="text-muted-foreground text-sm max-w-md mx-auto">
+                          Enter a target URL or IP address and click "Scan Target" to generate 
+                          network monitoring data and traffic analysis.
+                        </p>
+                      </div>
+                    )}
+                  </Card>
+                </TabsContent>
+                
                 <TabsContent value="recommendations" className="space-y-6">
                   <Card className="p-4 bg-card/80 border-secondary/30">
                     <h3 className="font-tech text-secondary mb-4">🛡️ Security Recommendations</h3>
