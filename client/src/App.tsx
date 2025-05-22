@@ -24,6 +24,7 @@ import SubnetCalculatorPage from "@/pages/tool-detail/subnet-calculator";
 import PacketAnalyzerPage from "@/pages/tool-detail/packet-analyzer";
 import WhoisLookupPage from "@/pages/tool-detail/whois-lookup";
 import MetadataExtractorPage from "@/pages/tool-detail/metadata-extractor";
+import WhoisPage from "@/pages/whois";
 import ScanHistory from "@/pages/scan-history";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
@@ -54,6 +55,7 @@ function Router() {
           <Route path="/tools/packet-analyzer" component={PacketAnalyzerPage} />
           <Route path="/tools/whois-lookup" component={WhoisLookupPage} />
           <Route path="/tools/metadata-extractor" component={MetadataExtractorPage} />
+          <Route path="/whois" component={WhoisPage} />
           <Route path="/scan-history" component={ScanHistory} />
           <Route component={NotFound} />
         </Switch>
