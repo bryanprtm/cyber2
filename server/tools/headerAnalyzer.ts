@@ -202,16 +202,19 @@ export async function analyzeHeaders(options: HeaderAnalyzerOptions): Promise<He
   
   try {
     // Configure axios request options
-    const axiosOptions: any = {
+    const axiosOptions = {
       timeout: options.timeout || 10000,
       maxRedirects: options.followRedirects ? 5 : 0,
       validateStatus: (status: number) => status >= 100 && status < 600,
-      headers: {}
+      headers: {} as Record<string, string>
     };
     
     // Set custom user agent if provided
     if (options.userAgent) {
       axiosOptions.headers['User-Agent'] = options.userAgent;
+    } else {
+      // Set a realistic user agent if none provided
+      axiosOptions.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
     }
     
     // Make the HTTP request
@@ -238,6 +241,12 @@ export async function analyzeHeaders(options: HeaderAnalyzerOptions): Promise<He
     if (normalizedHeaders['x-generator']) {
       serverInfo.technology = normalizedHeaders['x-generator'];
     }
+
+    // Extract additional technology indicators
+    const technologyIndicators = detectTechnologyFromHeaders(normalizedHeaders);
+    if (technologyIndicators && !serverInfo.technology) {
+      serverInfo.technology = technologyIndicators;
+    }
     
     // Analyze security headers
     const securityHeaders: SecurityHeader[] = [];
@@ -250,23 +259,16 @@ export async function analyzeHeaders(options: HeaderAnalyzerOptions): Promise<He
       
       if (headerValue) {
         let status: 'good' | 'warning' | 'bad' | 'info' = 'good';
+        let recommendation: string | undefined = undefined;
         
-        // Additional validation for specific headers
-        if (normalizedName === 'strict-transport-security') {
-          if (!headerValue.includes('max-age=') || parseInt(headerValue.split('max-age=')[1]) < 31536000) {
-            status = 'warning';
-          }
-        } else if (normalizedName === 'content-security-policy') {
-          if (headerValue.includes('unsafe-inline') || headerValue.includes('unsafe-eval')) {
-            status = 'warning';
-          }
-        } else if (normalizedName === 'x-frame-options') {
-          if (!['DENY', 'SAMEORIGIN'].includes(headerValue.toUpperCase())) {
-            status = 'warning';
-          }
-        } else if (normalizedName === 'access-control-allow-origin') {
-          if (headerValue === '*') {
-            status = 'warning';
+        // Use validators if available
+        if (metadata.validator) {
+          const validationResult = metadata.validator(headerValue);
+          if (!validationResult.valid) {
+            status = metadata.importance === 'critical' ? 'bad' : 'warning';
+            recommendation = validationResult.reason ? 
+              `Current value is problematic: ${validationResult.reason}. ${metadata.recommendation}` : 
+              metadata.recommendation;
           }
         }
         
@@ -274,14 +276,26 @@ export async function analyzeHeaders(options: HeaderAnalyzerOptions): Promise<He
           name: headerName,
           value: headerValue,
           description: metadata.description,
-          status
+          status,
+          recommendation
         });
       } else {
+        // Determine status based on importance
+        let status: 'good' | 'warning' | 'bad' | 'info' = 'bad';
+        
+        if (metadata.importance === 'low') {
+          status = 'info';
+        } else if (metadata.importance === 'medium') {
+          status = 'warning';
+        } else {
+          status = 'bad';
+        }
+        
         missingSecurityHeaders.push({
           name: headerName,
           value: null,
           description: metadata.description,
-          status: 'bad',
+          status,
           recommendation: metadata.recommendation
         });
       }
@@ -308,19 +322,41 @@ export async function analyzeHeaders(options: HeaderAnalyzerOptions): Promise<He
       });
     }
     
-    // Calculate security score (simple heuristic)
-    const maxScore = Object.keys(SECURITY_HEADERS).length;
-    const presentSecurityHeaders = securityHeaders.filter(h => 
-      Object.keys(SECURITY_HEADERS).includes(h.name) && h.status === 'good'
-    ).length;
+    if (normalizedHeaders['x-aspnet-version']) {
+      securityHeaders.push({
+        name: 'X-AspNet-Version',
+        value: normalizedHeaders['x-aspnet-version'],
+        description: 'Reveals ASP.NET version information',
+        status: 'bad',
+        recommendation: 'Remove this header to prevent technology fingerprinting'
+      });
+    }
+
+    if (normalizedHeaders['x-runtime']) {
+      securityHeaders.push({
+        name: 'X-Runtime',
+        value: normalizedHeaders['x-runtime'],
+        description: 'Reveals Ruby on Rails runtime information',
+        status: 'warning',
+        recommendation: 'Remove this header to prevent technology fingerprinting'
+      });
+    }
     
-    const securityScore = Math.round((presentSecurityHeaders / maxScore) * 100);
+    // Calculate security score with weighted approach
+    const scoreData = calculateSecurityScore(securityHeaders, missingSecurityHeaders);
     
     // Extract content type
     const contentType = normalizedHeaders['content-type'];
     
     // Extract cookies (if any)
-    const cookies: any[] = [];
+    const cookies: Array<{
+      name: string;
+      value: string;
+      secure: boolean;
+      httpOnly: boolean;
+      sameSite?: string;
+    }> = [];
+
     if (normalizedHeaders['set-cookie']) {
       const cookieStrings = Array.isArray(normalizedHeaders['set-cookie']) 
         ? normalizedHeaders['set-cookie'] 
@@ -329,24 +365,33 @@ export async function analyzeHeaders(options: HeaderAnalyzerOptions): Promise<He
       cookieStrings.forEach(cookieStr => {
         try {
           const parts = cookieStr.split(';');
-          const [name, value] = parts[0].split('=').map(s => s.trim());
+          const nameValuePair = parts[0].split('=');
           
-          const cookie: any = {
-            name,
-            value,
-            secure: cookieStr.toLowerCase().includes('secure'),
-            httpOnly: cookieStr.toLowerCase().includes('httponly')
-          };
-          
-          // Extract SameSite if present
-          const sameSitePart = parts.find(p => p.trim().toLowerCase().startsWith('samesite='));
-          if (sameSitePart) {
-            cookie.sameSite = sameSitePart.split('=')[1].trim();
+          if (nameValuePair.length >= 2) {
+            const name = nameValuePair[0].trim();
+            const value = nameValuePair.slice(1).join('=').trim(); // Handle values with = in them
+            
+            const cookie = {
+              name,
+              value,
+              secure: cookieStr.toLowerCase().includes('secure'),
+              httpOnly: cookieStr.toLowerCase().includes('httponly')
+            };
+            
+            // Extract SameSite if present
+            const sameSitePart = parts.find(p => p.trim().toLowerCase().startsWith('samesite='));
+            if (sameSitePart) {
+              const sameSiteValue = sameSitePart.split('=')[1]?.trim();
+              if (sameSiteValue) {
+                cookie.sameSite = sameSiteValue;
+              }
+            }
+            
+            cookies.push(cookie);
           }
-          
-          cookies.push(cookie);
         } catch (e) {
           // Skip malformed cookies
+          console.error("Error parsing cookie:", e);
         }
       });
     }
@@ -360,13 +405,13 @@ export async function analyzeHeaders(options: HeaderAnalyzerOptions): Promise<He
       missingSecurityHeaders,
       serverInfo,
       totalTime: endTime - startTime,
-      securityScore,
+      securityScore: scoreData.score,
       contentType,
       cookies,
       requestSummary: {
         method: 'GET',
         url: options.url,
-        redirects: response.request?._redirectable?._redirectCount || 0,
+        redirects: (response as any).request?._redirectable?._redirectCount || 0,
         headersCount: Object.keys(originalHeaders).length
       }
     };
@@ -377,4 +422,126 @@ export async function analyzeHeaders(options: HeaderAnalyzerOptions): Promise<He
       throw new Error(`Header analysis failed: ${(error as Error).message}`);
     }
   }
+}
+
+/**
+ * Calculates a weighted security score based on present and missing headers
+ * Gives more weight to critical security headers
+ */
+function calculateSecurityScore(
+  presentHeaders: SecurityHeader[], 
+  missingHeaders: SecurityHeader[]
+): { score: number; details: string } {
+  // Define weights based on importance
+  const weights = {
+    'critical': 5,
+    'high': 3,
+    'medium': 2,
+    'low': 1
+  };
+  
+  let totalPoints = 0;
+  let earnedPoints = 0;
+  let details = "";
+  
+  // Calculate points for present headers
+  for (const header of presentHeaders) {
+    const headerName = header.name;
+    const metadata = SECURITY_HEADERS[headerName];
+    
+    if (!metadata) continue;
+    
+    const headerWeight = weights[metadata.importance] || 1;
+    totalPoints += headerWeight;
+    
+    // If status is good, add full points
+    if (header.status === 'good') {
+      earnedPoints += headerWeight;
+    } 
+    // If warning, add half points
+    else if (header.status === 'warning') {
+      earnedPoints += headerWeight / 2;
+    }
+    // No points for 'bad' status
+  }
+  
+  // Subtract points for missing critical/high headers
+  for (const header of missingHeaders) {
+    const headerName = header.name;
+    const metadata = SECURITY_HEADERS[headerName];
+    
+    if (!metadata) continue;
+    
+    const headerWeight = weights[metadata.importance] || 1;
+    totalPoints += headerWeight;
+    
+    // Missing headers earn no points, already accounted for above
+  }
+  
+  // Calculate percentage
+  const score = totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
+  
+  // Create score details
+  details = `Earned ${earnedPoints} out of ${totalPoints} possible points`;
+  
+  return { score, details };
+}
+
+/**
+ * Attempts to detect technology stack from HTTP headers
+ */
+function detectTechnologyFromHeaders(headers: Record<string, string>): string | undefined {
+  const techPatterns: Array<{pattern: RegExp; name: string}> = [
+    // Web servers
+    { pattern: /Apache/i, name: 'Apache' },
+    { pattern: /nginx/i, name: 'Nginx' },
+    { pattern: /IIS/i, name: 'Microsoft IIS' },
+    { pattern: /LiteSpeed/i, name: 'LiteSpeed' },
+    
+    // Programming languages/frameworks
+    { pattern: /PHP/i, name: 'PHP' },
+    { pattern: /ASP\.NET/i, name: 'ASP.NET' },
+    { pattern: /Express/i, name: 'Express.js' },
+    { pattern: /Rails/i, name: 'Ruby on Rails' },
+    { pattern: /Django/i, name: 'Django' },
+    { pattern: /Laravel/i, name: 'Laravel' },
+    { pattern: /Spring/i, name: 'Spring' },
+    
+    // CMS and platforms
+    { pattern: /WordPress/i, name: 'WordPress' },
+    { pattern: /Drupal/i, name: 'Drupal' },
+    { pattern: /Joomla/i, name: 'Joomla' },
+    { pattern: /Shopify/i, name: 'Shopify' },
+    { pattern: /Magento/i, name: 'Magento' },
+    { pattern: /Ghost/i, name: 'Ghost' },
+  ];
+  
+  // Check server header
+  if (headers['server']) {
+    for (const tech of techPatterns) {
+      if (tech.pattern.test(headers['server'])) {
+        return tech.name;
+      }
+    }
+  }
+  
+  // Check powered by header
+  if (headers['x-powered-by']) {
+    for (const tech of techPatterns) {
+      if (tech.pattern.test(headers['x-powered-by'])) {
+        return tech.name;
+      }
+    }
+  }
+  
+  // Check all headers for technology clues
+  for (const [headerName, headerValue] of Object.entries(headers)) {
+    for (const tech of techPatterns) {
+      if (tech.pattern.test(headerValue)) {
+        return tech.name;
+      }
+    }
+  }
+  
+  return undefined;
 }
