@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-// Import local theme context instead of next-themes
-import { useContext } from "react";
+// Simplified approach - we'll use the document's class list directly
 
 interface ThreatAnimationProps {
   intensity?: number; // 0-100, controls number of particles and speed
@@ -42,12 +41,41 @@ export default function ThreatAnimation({
   className = ""
 }: ThreatAnimationProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { theme } = useTheme();
+  const [isDarkTheme, setIsDarkTheme] = useState(true); // Default to dark theme
   const [particles, setParticles] = useState<Particle[]>([]);
   const [threats, setThreats] = useState<ThreatSource[]>([]);
   const [frame, setFrame] = useState(0);
   const [serverPosition, setServerPosition] = useState({ x: 0, y: 0 });
   const [isActive, setIsActive] = useState(true);
+  
+  // Detect theme changes
+  useEffect(() => {
+    const checkTheme = () => {
+      // Check if document has 'dark' class or a dark color scheme preference
+      const isDark = document.documentElement.classList.contains('dark') || 
+                    window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setIsDarkTheme(isDark);
+    };
+    
+    checkTheme();
+    
+    // Watch for changes in color scheme preference
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => checkTheme();
+    mediaQuery.addEventListener('change', handleChange);
+    
+    // Watch for changes to document classes (like when toggling theme)
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, { 
+      attributes: true, 
+      attributeFilter: ['class'] 
+    });
+    
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+      observer.disconnect();
+    };
+  }, []);
   
   const frameRef = useRef(frame);
   frameRef.current = frame;
@@ -243,7 +271,7 @@ export default function ThreatAnimation({
             size: Math.random() * 2 + 1,
             speedX: Math.cos(angle) * (Math.random() * 0.5 + 0.2),
             speedY: Math.sin(angle) * (Math.random() * 0.5 + 0.2),
-            color: theme === 'dark' ? '#3498db' : '#2980b9',
+            color: isDarkTheme ? '#3498db' : '#2980b9',
             opacity: 0.6,
             life: Math.floor(Math.random() * 60) + 30,
             maxLife: 90,
@@ -275,7 +303,7 @@ export default function ThreatAnimation({
         ctx.beginPath();
         ctx.moveTo(threat.x, threat.y);
         ctx.lineTo(serverPositionRef.current.x, serverPositionRef.current.y);
-        ctx.strokeStyle = theme === 'dark' ? '#aaa' : '#555';
+        ctx.strokeStyle = isDarkTheme ? '#aaa' : '#555';
         ctx.lineWidth = 0.5;
         ctx.stroke();
       });
@@ -284,13 +312,13 @@ export default function ThreatAnimation({
       ctx.globalAlpha = 1;
       ctx.beginPath();
       ctx.arc(serverPositionRef.current.x, serverPositionRef.current.y, 15, 0, Math.PI * 2);
-      ctx.fillStyle = theme === 'dark' ? '#2ecc71' : '#27ae60';
+      ctx.fillStyle = isDarkTheme ? '#2ecc71' : '#27ae60';
       ctx.fill();
       
       // Draw inner server circle
       ctx.beginPath();
       ctx.arc(serverPositionRef.current.x, serverPositionRef.current.y, 10, 0, Math.PI * 2);
-      ctx.fillStyle = theme === 'dark' ? '#e6e6e6' : '#fff';
+      ctx.fillStyle = isDarkTheme ? '#e6e6e6' : '#fff';
       ctx.fill();
       
       // Draw threat sources
@@ -303,7 +331,7 @@ export default function ThreatAnimation({
         
         // Draw country code
         ctx.font = 'bold 10px monospace';
-        ctx.fillStyle = theme === 'dark' ? '#fff' : '#000';
+        ctx.fillStyle = isDarkTheme ? '#fff' : '#000';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(threat.country, threat.x, threat.y);
@@ -365,7 +393,7 @@ export default function ThreatAnimation({
     return () => {
       cancelAnimationFrame(frameId);
     };
-  }, [width, height, intensity, theme]);
+  }, [width, height, intensity, isDarkTheme]);
   
   // Pause/resume animation when component is hidden/visible
   useEffect(() => {
