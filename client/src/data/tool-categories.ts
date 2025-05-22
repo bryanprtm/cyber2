@@ -90,13 +90,6 @@ export const tools: Tool[] = [
   
   // Information Gathering Tools
   {
-    id: "whois-lookup",
-    name: "WHOIS Lookup",
-    description: "Retrieve domain registration and ownership information.",
-    category: "info",
-    categoryLabel: "Recon"
-  },
-  {
     id: "header-analyzer",
     name: "Header Analyzer",
     description: "Analyze HTTP headers for security issues.",
