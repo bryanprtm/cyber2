@@ -12,15 +12,15 @@ export default function Home() {
   
   useEffect(() => {
     // Simulate terminal initialization
-    addSystemLine("Security Operation Center v1.0.2_alpha initialized");
-    addInfoLine("Loading system components...");
+    addSystemLine("Pusat Operasi Keamanan v1.0.2_alpha diinisialisasi");
+    addInfoLine("Memuat komponen sistem...");
     
     const timer1 = setTimeout(() => {
-      addInfoLine("Security modules configured and ready");
+      addInfoLine("Modul keamanan telah dikonfigurasi dan siap");
     }, 800);
     
     const timer2 = setTimeout(() => {
-      addSystemLine("System ready. Type 'help' for a list of commands.");
+      addSystemLine("Sistem siap. Ketik 'bantuan' untuk daftar perintah.");
     }, 1500);
     
     return () => {
@@ -34,16 +34,16 @@ export default function Home() {
       <div className="relative">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-16">
           <div className="flex flex-col justify-center">
-            <h2 className="text-3xl font-tech mb-4 text-glitch" data-text="Cybersecurity Tools">
-              Cybersecurity Tools
+            <h2 className="text-3xl font-tech mb-4 text-glitch" data-text="Alat Keamanan Cyber">
+              Alat Keamanan Cyber
             </h2>
             <p className="mb-6 text-muted-foreground font-mono">
-              Access a comprehensive collection of security tools designed for penetration testing, 
-              vulnerability scanning, and network analysis. All tools are web-based and require no installation.
+              Akses koleksi lengkap alat keamanan yang dirancang untuk pengujian penetrasi, 
+              pemindaian kerentanan, dan analisis jaringan. Semua alat berbasis web dan tidak memerlukan instalasi.
             </p>
             <Link href="/tools">
               <Button className="w-full md:w-auto bg-primary text-primary-foreground hover:bg-primary/90 font-tech">
-                Explore Tools
+                Jelajahi Alat
               </Button>
             </Link>
           </div>
@@ -51,27 +51,27 @@ export default function Home() {
           <div className="relative">
             <MatrixBackground />
             <Card className="border border-primary/50 bg-card/80 backdrop-blur-sm p-6 h-full">
-              <h3 className="text-xl font-tech mb-4 text-primary">Features</h3>
+              <h3 className="text-xl font-tech mb-4 text-primary">Fitur</h3>
               <ul className="space-y-3 font-mono text-sm">
                 <li className="flex items-start">
                   <span className="text-primary mr-2">✓</span>
-                  <span>Web-based vulnerability scanning</span>
+                  <span>Pemindaian kerentanan berbasis web</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-primary mr-2">✓</span>
-                  <span>Network reconnaissance tools</span>
+                  <span>Alat pengintaian jaringan</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-primary mr-2">✓</span>
-                  <span>Information gathering utilities</span>
+                  <span>Utilitas pengumpulan informasi</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-primary mr-2">✓</span>
-                  <span>Password and encryption tools</span>
+                  <span>Alat kata sandi dan enkripsi</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-primary mr-2">✓</span>
-                  <span>Web exploitation framework</span>
+                  <span>Kerangka eksploitasi web</span>
                 </li>
               </ul>
             </Card>
@@ -79,32 +79,32 @@ export default function Home() {
         </div>
         
         <div className="relative mb-16">
-          <h2 className="text-2xl font-tech mb-6 text-center">Live Cyber Threat Intelligence</h2>
+          <h2 className="text-2xl font-tech mb-6 text-center">Intelijen Ancaman Cyber Langsung</h2>
           <CheckpointThreatMap />
         </div>
         
         <div className="relative">
-          <h2 className="text-2xl font-tech mb-6 text-center">Interactive Terminal</h2>
+          <h2 className="text-2xl font-tech mb-6 text-center">Terminal Interaktif</h2>
           <Terminal lines={[]} />
         </div>
       </div>
       
       <div className="mt-16">
-        <h2 className="text-2xl font-tech mb-6 text-center">Getting Started</h2>
+        <h2 className="text-2xl font-tech mb-6 text-center">Cara Memulai</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="bg-card border border-secondary/30 p-5">
-            <h3 className="text-xl font-tech mb-2 text-secondary">1. Select a Tool</h3>
-            <p className="text-sm font-mono text-muted-foreground">Browse through our categorized collection of cybersecurity tools and select one that matches your needs.</p>
+            <h3 className="text-xl font-tech mb-2 text-secondary">1. Pilih Alat</h3>
+            <p className="text-sm font-mono text-muted-foreground">Telusuri koleksi alat keamanan cyber kami yang dikategorikan dan pilih yang sesuai dengan kebutuhan Anda.</p>
           </Card>
           
           <Card className="bg-card border border-secondary/30 p-5">
-            <h3 className="text-xl font-tech mb-2 text-secondary">2. Configure Parameters</h3>
-            <p className="text-sm font-mono text-muted-foreground">Set the required parameters for your selected tool, such as target URL, IP address, or input data.</p>
+            <h3 className="text-xl font-tech mb-2 text-secondary">2. Konfigurasi Parameter</h3>
+            <p className="text-sm font-mono text-muted-foreground">Tetapkan parameter yang diperlukan untuk alat yang Anda pilih, seperti URL target, alamat IP, atau data input.</p>
           </Card>
           
           <Card className="bg-card border border-secondary/30 p-5">
-            <h3 className="text-xl font-tech mb-2 text-secondary">3. Analyze Results</h3>
-            <p className="text-sm font-mono text-muted-foreground">Review the detailed output provided by the tool in the terminal display and take appropriate action.</p>
+            <h3 className="text-xl font-tech mb-2 text-secondary">3. Analisis Hasil</h3>
+            <p className="text-sm font-mono text-muted-foreground">Tinjau output rinci yang disediakan oleh alat di tampilan terminal dan ambil tindakan yang sesuai.</p>
           </Card>
         </div>
       </div>
@@ -112,11 +112,11 @@ export default function Home() {
       <div className="mt-16 text-center">
         <div className="inline-block border border-accent/30 p-6 rounded-md bg-card relative overflow-hidden">
           <MatrixBackground className="opacity-20" />
-          <h2 className="text-xl font-tech mb-4 text-accent">Important Disclaimer</h2>
+          <h2 className="text-xl font-tech mb-4 text-accent">Penafian Penting</h2>
           <p className="text-sm font-mono text-muted-foreground max-w-2xl">
-            The tools provided by Security Operation Center are intended for educational and ethical purposes only. 
-            Always ensure you have proper authorization before testing any system or network. 
-            Unauthorized scanning or testing may be illegal in your jurisdiction.
+            Alat yang disediakan oleh Pusat Operasi Keamanan ditujukan hanya untuk tujuan pendidikan dan etis.
+            Selalu pastikan Anda memiliki otorisasi yang tepat sebelum menguji sistem atau jaringan apa pun.
+            Pemindaian atau pengujian yang tidak sah mungkin ilegal di yurisdiksi Anda.
           </p>
         </div>
       </div>

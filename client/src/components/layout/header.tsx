@@ -7,12 +7,12 @@ export default function Header() {
   const [location] = useLocation();
   
   const navItems = [
-    { name: "Home", path: "/" },
-    { name: "Tools", path: "/tools" },
-    { name: "Security Dashboard", path: "/security-dashboard" },
-    { name: "Scan History", path: "/scan-history" },
-    { name: "Docs", path: "/docs" },
-    { name: "About", path: "/about" }
+    { name: "Beranda", path: "/" },
+    { name: "Alat", path: "/tools" },
+    { name: "Dasbor Keamanan", path: "/security-dashboard" },
+    { name: "Riwayat Pemindaian", path: "/scan-history" },
+    { name: "Dokumentasi", path: "/docs" },
+    { name: "Tentang", path: "/about" }
   ];
   
   return (
@@ -24,9 +24,9 @@ export default function Header() {
             <Link href="/">
               <div 
                 className="text-primary text-4xl font-tech text-glitch cursor-pointer" 
-                data-text="Security Operation Center"
+                data-text="Pusat Operasi Keamanan"
               >
-                Security Operation Center
+                Pusat Operasi Keamanan
               </div>
             </Link>
             <div className="ml-3 text-xs text-secondary font-mono mt-2">v1.0.3_alpha</div>
@@ -54,11 +54,11 @@ export default function Header() {
         </div>
         <div className="mt-8 text-center">
           <h1 className="text-3xl md:text-5xl font-tech mb-4">
-            Advanced <span className="text-primary">Cybersecurity</span> Toolkit
+            Perangkat <span className="text-primary">Keamanan Cyber</span> Canggih
           </h1>
           <p className="font-mono text-muted-foreground max-w-2xl mx-auto">
-            Access powerful security tools for scanning, testing, and hardening digital systems. 
-            For educational purposes only.
+            Akses alat keamanan yang kuat untuk memindai, menguji, dan memperkuat sistem digital.
+            Hanya untuk tujuan pendidikan.
           </p>
         </div>
       </div>
