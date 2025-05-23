@@ -1616,15 +1616,15 @@ export default function SecurityMonitor() {
             <>
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid grid-cols-6 mb-4">
-                  <TabsTrigger value="dashboard" className="font-tech">Dashboard</TabsTrigger>
-                  <TabsTrigger value="vulnerabilities" className="font-tech">Vulnerabilities</TabsTrigger>
-                  <TabsTrigger value="threat-intel" className="font-tech">Threat Intel</TabsTrigger>
-                  <TabsTrigger value="ip-info" className="font-tech">IP Info</TabsTrigger>
-                  <TabsTrigger value="network" className="font-tech">Network</TabsTrigger>
-                  <TabsTrigger value="recommendations" className="font-tech">Recommendations</TabsTrigger>
+                  <TabsTrigger value="dashboard" className="font-tech">Dasbor</TabsTrigger>
+                  <TabsTrigger value="vulnerabilities" className="font-tech">Kerentanan</TabsTrigger>
+                  <TabsTrigger value="threat-intel" className="font-tech">Intel Ancaman</TabsTrigger>
+                  <TabsTrigger value="ip-info" className="font-tech">Info IP</TabsTrigger>
+                  <TabsTrigger value="network" className="font-tech">Jaringan</TabsTrigger>
+                  <TabsTrigger value="recommendations" className="font-tech">Rekomendasi</TabsTrigger>
                 </TabsList>
                 
-                {/* Dashboard Tab */}
+                {/* Tab Dasbor */}
                 <TabsContent value="dashboard" className="space-y-6">
                   {/* Security Overview Card - Big status card at the top */}
                   {targetDetails && securityOverview && (
@@ -1869,7 +1869,7 @@ export default function SecurityMonitor() {
                 {/* Vulnerabilities Tab */}
                 <TabsContent value="vulnerabilities" className="space-y-6">
                   <Card className="p-4 bg-card/80 border-secondary/30">
-                    <h3 className="font-tech text-secondary mb-4">🔍 Vulnerability Scan</h3>
+                    <h3 className="font-tech text-secondary mb-4">🔍 Pemindaian Kerentanan</h3>
                     
                     {/* Port Information */}
                     <div className="mb-6">
@@ -2129,7 +2129,7 @@ export default function SecurityMonitor() {
                 {/* Threat Intelligence Tab */}
                 <TabsContent value="threat-intel" className="space-y-6">
                   <Card className="p-4 bg-card/80 border-secondary/30">
-                    <h3 className="font-tech text-secondary mb-4">🧬 Threat Intelligence</h3>
+                    <h3 className="font-tech text-secondary mb-4">🧬 Intelijen Ancaman</h3>
                     
                     {threatIntelligence && (
                       <div className="space-y-6">
@@ -2306,7 +2306,7 @@ export default function SecurityMonitor() {
                 {/* IP Information Tab */}
                 <TabsContent value="ip-info" className="space-y-6">
                   <Card className="p-4 bg-card/80 border-primary/30">
-                    <h3 className="font-tech text-primary mb-4">🔎 IP Information</h3>
+                    <h3 className="font-tech text-primary mb-4">🔎 Informasi IP</h3>
                     
                     {threatIntelligence && threatIntelligence.ipInfo ? (
                       <div className="space-y-6">
@@ -2315,19 +2315,19 @@ export default function SecurityMonitor() {
                           <Card className="p-4 border-border">
                             <h4 className="text-sm font-semibold flex items-center mb-3">
                               <Globe className="h-4 w-4 mr-2 text-primary" />
-                              Geolocation
+                              Geolokasi
                             </h4>
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
-                                <span className="text-muted-foreground">IP Address:</span>
+                                <span className="text-muted-foreground">Alamat IP:</span>
                                 <span className="font-mono font-medium">{threatIntelligence.ipInfo.address}</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-muted-foreground">Country:</span>
+                                <span className="text-muted-foreground">Negara:</span>
                                 <span className="font-medium">{threatIntelligence.ipInfo.geolocation.country} ({threatIntelligence.ipInfo.geolocation.countryCode})</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-muted-foreground">Region/City:</span>
+                                <span className="text-muted-foreground">Wilayah/Kota:</span>
                                 <span className="font-medium">{threatIntelligence.ipInfo.geolocation.region}, {threatIntelligence.ipInfo.geolocation.city}</span>
                               </div>
                               <div className="flex justify-between">
@@ -2335,7 +2335,7 @@ export default function SecurityMonitor() {
                                 <span className="font-medium">{threatIntelligence.ipInfo.geolocation.isp}</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-muted-foreground">Organization:</span>
+                                <span className="text-muted-foreground">Organisasi:</span>
                                 <span className="font-medium">{threatIntelligence.ipInfo.geolocation.org}</span>
                               </div>
                               <div className="flex justify-between">
@@ -2349,11 +2349,11 @@ export default function SecurityMonitor() {
                           <Card className="p-4 border-border">
                             <h4 className="text-sm font-semibold flex items-center mb-3">
                               <Shield className="h-4 w-4 mr-2 text-primary" />
-                              Reputation
+                              Reputasi
                             </h4>
                             <div className="mb-3">
                               <div className="flex justify-between items-center">
-                                <span className="text-sm text-muted-foreground">Reputation Score:</span>
+                                <span className="text-sm text-muted-foreground">Skor Reputasi:</span>
                                 <span className={`text-sm font-semibold ${
                                   threatIntelligence.ipInfo.reputation.score > 75 ? "text-red-500" :
                                   threatIntelligence.ipInfo.reputation.score > 50 ? "text-orange-500" :
@@ -2524,7 +2524,7 @@ export default function SecurityMonitor() {
                 {/* Network Monitoring Tab */}
                 <TabsContent value="network" className="space-y-6">
                   <Card className="p-4 bg-card/80 border-accent/30">
-                    <h3 className="font-tech text-accent mb-4">📊 Network Monitoring</h3>
+                    <h3 className="font-tech text-accent mb-4">📊 Pemantauan Jaringan</h3>
                     
                     {threatIntelligence && threatIntelligence.networkMonitoring ? (
                       <div className="space-y-6">
@@ -2725,7 +2725,7 @@ export default function SecurityMonitor() {
                 
                 <TabsContent value="recommendations" className="space-y-6">
                   <Card className="p-4 bg-card/80 border-secondary/30">
-                    <h3 className="font-tech text-secondary mb-4">🛡️ Security Recommendations</h3>
+                    <h3 className="font-tech text-secondary mb-4">🛡️ Rekomendasi Keamanan</h3>
                     
                     {securityRecommendations.length > 0 ? (
                       <div className="space-y-6">
