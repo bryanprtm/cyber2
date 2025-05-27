@@ -45,9 +45,9 @@ npm install
 echo "📦 Installing PM2..."
 sudo npm install -g pm2
 
-# Create PM2 ecosystem file
+# Create PM2 ecosystem file (CommonJS format)
 echo "📝 Creating PM2 configuration..."
-cat > ecosystem.config.js << 'EOF'
+cat > ecosystem.config.cjs << 'EOF'
 module.exports = {
   apps: [{
     name: 'security-operation-center',
@@ -76,7 +76,7 @@ sudo chown ubuntu:ubuntu /var/log/soc-*.log 2>/dev/null || true
 # Start application with PM2
 echo "🚀 Starting Security Operation Center with PM2..."
 pm2 delete security-operation-center 2>/dev/null || true
-pm2 start ecosystem.config.js
+pm2 start ecosystem.config.cjs
 
 # Configure PM2 to start on boot
 pm2 save

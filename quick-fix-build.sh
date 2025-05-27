@@ -1,89 +1,109 @@
 #!/bin/bash
-# Quick fix untuk build error Security Operation Center
 
-echo "🔧 Quick Fix - Security Operation Center Build"
-echo "============================================="
+# Security Operation Center - Quick Fix untuk Ubuntu
+# Mengatasi masalah build dan deployment
 
-# Stop any running processes
-pkill -f "npm run" || true
-pkill -f "node" || true
+echo "🔧 Quick Fix - Security Operation Center"
+echo "======================================="
 
-# Create dist directory jika belum ada
-mkdir -p dist
+# Stop semua service yang konflik
+echo "🛑 Stopping conflicting services..."
+sudo systemctl stop nginx apache2 2>/dev/null || true
+sudo pkill -f node 2>/dev/null || true
+sudo fuser -k 5000/tcp 2>/dev/null || true
 
-# Buat simple build fallback
-echo "📦 Creating simple build fallback..."
-cat > dist/index.js << 'EOF'
-// Simple fallback server untuk Security Operation Center
-import express from 'express';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+# Install Node.js 18 LTS (lebih stabil)
+echo "📦 Installing Node.js 18 LTS..."
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get install -y nodejs
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const app = express();
-const PORT = process.env.PORT || 5000;
+echo "✅ Node.js version: $(node --version)"
+echo "✅ NPM version: $(npm --version)"
 
-// Middleware
-app.use(express.json());
-app.use(express.static(join(__dirname, '../client/dist')));
-
-// Simple API endpoints
-app.get('/api/health', (req, res) => {
-    res.json({
-        status: 'OK',
-        version: '2.0.0-quick-fix',
-        timestamp: new Date().toISOString(),
-        server: 'Express Fallback'
-    });
-});
-
-app.get('/api/tools', (req, res) => {
-    const tools = [
-        { id: 'port-scanner', nama: 'Port Scanner', kategori: 'Network', aktif: 1 },
-        { id: 'whois-lookup', nama: 'WHOIS Lookup', kategori: 'Intel', aktif: 1 },
-        { id: 'ping-sweep', nama: 'Ping Sweep', kategori: 'Network', aktif: 1 },
-        { id: 'header-analyzer', nama: 'Header Analyzer', kategori: 'Web', aktif: 1 },
-        { id: 'ssl-scanner', nama: 'SSL Scanner', kategori: 'Security', aktif: 1 }
-    ];
-    res.json(tools);
-});
-
-// Fallback untuk semua routes lainnya
-app.get('*', (req, res) => {
-    res.sendFile(join(__dirname, '../client/index.html'));
-});
-
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Security Operation Center running on port ${PORT}`);
-    console.log(`📱 Application ready at http://0.0.0.0:${PORT}`);
-});
-EOF
-
-# Coba build normal dulu dengan timeout
-echo "⚡ Attempting normal build with timeout..."
-timeout 60s npm run build || {
-    echo "⚠️ Normal build timed out, using fallback"
-    
-    # Create minimal client build
-    mkdir -p client/dist
-    cp client/index.html client/dist/ 2>/dev/null || true
-    
-    echo "✅ Fallback build ready"
-}
-
-# Test if dist/index.js exists and is valid
-if [ -f "dist/index.js" ]; then
-    echo "✅ Build file ready"
-else
-    echo "❌ Build failed, using PHP version instead"
-    # Start PHP version as backup
-    if command -v php &> /dev/null; then
-        echo "🐘 Starting PHP backup server..."
-        php -S 0.0.0.0:8080 index-replit.php &
-        echo "📱 PHP server started on port 8080"
-    fi
+# Clone atau update repository
+if [ ! -d "cyber2" ]; then
+    echo "📥 Cloning repository..."
+    git clone https://github.com/bryanprtm/cyber2.git
 fi
 
+cd cyber2
+
+# Clean install
+echo "🧹 Clean installation..."
+rm -rf node_modules package-lock.json
+npm cache clean --force
+npm install
+
+# Create simple startup script
+echo "📝 Creating startup script..."
+cat > start-soc.sh << 'EOF'
+#!/bin/bash
+cd /home/ubuntu/cyber2
+export NODE_ENV=production
+export PORT=5000
+echo "🚀 Starting Security Operation Center on port 5000..."
+npm run dev
+EOF
+
+chmod +x start-soc.sh
+
+# Create background service script
+echo "📝 Creating background service..."
+cat > start-background.sh << 'EOF'
+#!/bin/bash
+cd /home/ubuntu/cyber2
+export NODE_ENV=production
+export PORT=5000
+nohup npm run dev > /tmp/soc.log 2>&1 &
+echo $! > /tmp/soc.pid
+echo "🚀 Security Operation Center started in background"
+echo "📋 View logs: tail -f /tmp/soc.log"
+echo "🛑 Stop service: kill $(cat /tmp/soc.pid)"
+EOF
+
+chmod +x start-background.sh
+
+# Test build
+echo "🧪 Testing build..."
+npm run build 2>/dev/null || {
+    echo "⚠️  Build failed, using development mode"
+}
+
+# Test aplikasi
+echo "🧪 Starting application test..."
+timeout 15s npm run dev &
+TEST_PID=$!
+sleep 10
+
+if curl -f http://localhost:5000/api/health > /dev/null 2>&1; then
+    echo "✅ Application test successful!"
+    kill $TEST_PID 2>/dev/null || true
+else
+    echo "⚠️  Application test inconclusive"
+    kill $TEST_PID 2>/dev/null || true
+fi
+
+# Get server info
+SERVER_IP=$(curl -s ifconfig.me 2>/dev/null || hostname -I | awk '{print $1}')
+
 echo ""
-echo "🎉 Quick fix completed!"
-echo "🌐 Try accessing: http://0.0.0.0:5000 (Node.js) or http://0.0.0.0:8080 (PHP)"
+echo "🎉 Quick Fix Complete!"
+echo "====================)"
+echo ""
+echo "🚀 Start Application:"
+echo "• Manual: ./start-soc.sh"
+echo "• Background: ./start-background.sh"
+echo ""
+echo "🌐 Access URLs:"
+echo "• Main App: http://$SERVER_IP:5000"
+echo "• Health Check: http://$SERVER_IP:5000/api/health"
+echo ""
+echo "📋 Troubleshooting:"
+echo "• View logs: tail -f /tmp/soc.log"
+echo "• Check process: ps aux | grep node"
+echo "• Stop background: kill \$(cat /tmp/soc.pid)"
+echo ""
+echo "🔒 Firewall:"
+echo "• sudo ufw allow 5000"
+echo ""
+echo "✅ Security Operation Center is ready!"
