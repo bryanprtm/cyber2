@@ -1,25 +1,14 @@
 {
   "name": "security-operations-center",
-  "version": "1.0.0",
-  "description": "Pusat Operasi Keamanan - Cybersecurity Tools Collection",
-  "main": "index.js",
+  "version": "2.0.0",
+  "description": "Cybersecurity toolkit web application",
+  "main": "simple-server.js",
   "scripts": {
-    "start": "node index.js",
-    "prod": "NODE_ENV=production node index.js",
-    "dev": "NODE_ENV=development node index.js"
+    "start": "node simple-server.js",
+    "dev": "node simple-server.js",
+    "simple": "node simple-server.js"
   },
-  "keywords": [
-    "cybersecurity",
-    "security-tools",
-    "penetration-testing",
-    "vulnerability-scanner"
-  ],
-  "author": "Security Team",
-  "license": "MIT",
   "dependencies": {
-    "express": "^4.18.0"
-  },
-  "engines": {
-    "node": ">=16.0.0"
+    "express": "^4.21.2"
   }
 }
