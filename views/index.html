@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Operation Center</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+            color: #00ff41;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+        }
+        
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+        }
+        
+        .cyber-card {
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid #00ff41;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .cyber-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 255, 65, 0.3);
+        }
+        
+        .btn-cyber {
+            background: linear-gradient(45deg, #00ff41, #00d4aa);
+            border: none;
+            color: #000;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-cyber:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 255, 65, 0.5);
+        }
+        
+        .terminal {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #00ff41;
+            border-radius: 5px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .glitch {
+            animation: glitch 2s infinite;
+        }
+        
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+        
+        .scan-result {
+            background: rgba(0, 255, 65, 0.05);
+            border-left: 4px solid #00ff41;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="matrix-bg" id="matrix"></div>
+    
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand glitch" href="#">
+                <i class="fas fa-shield-alt me-2"></i>
+                Security Operation Center
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="#dashboard">Dashboard</a>
+                <a class="nav-link" href="#tools">Tools</a>
+                <a class="nav-link" href="#history">Riwayat</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="cyber-card p-4 mb-4">
+                    <h1 class="text-center mb-4">
+                        <i class="fas fa-terminal me-2"></i>
+                        Pusat Operasi Keamanan Siber
+                    </h1>
+                    <p class="text-center lead">
+                        Platform analisis keamanan komprehensif dengan 13 tools cybersecurity profesional
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row" id="tools-container">
+            <!-- Tools akan dimuat secara dinamis -->
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="cyber-card p-4">
+                    <h5><i class="fas fa-terminal me-2"></i>Terminal Scan</h5>
+                    <div class="terminal" id="terminal-output">
+                        <div class="text-success">
+                            root@security-center:~$ Sistem siap...<br>
+                            [INFO] Security Operation Center v2.0 - PHP Edition<br>
+                            [INFO] 13 cybersecurity tools tersedia<br>
+                            [INFO] Database MySQL terhubung<br>
+                            [READY] Pilih tool untuk memulai scan<br>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="cyber-card p-4">
+                    <h5><i class="fas fa-chart-line me-2"></i>Dashboard Keamanan</h5>
+                    <div id="dashboard-stats">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <h3 id="total-scans">0</h3>
+                                <small>Total Scan</small>
+                            </div>
+                            <div class="col-6">
+                                <h3 id="security-score">0%</h3>
+                                <small>Skor Keamanan</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Matrix background effect
+        function createMatrix() {
+            const matrix = document.getElementById('matrix');
+            const chars = '01';
+            
+            for (let i = 0; i < 50; i++) {
+                const div = document.createElement('div');
+                div.style.position = 'absolute';
+                div.style.left = Math.random() * 100 + '%';
+                div.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                div.style.opacity = Math.random();
+                div.style.fontSize = Math.random() * 16 + 10 + 'px';
+                div.style.color = '#00ff41';
+                div.innerHTML = chars[Math.floor(Math.random() * chars.length)];
+                
+                div.style.animation = 'fall linear infinite';
+                matrix.appendChild(div);
+            }
+        }
+        
+        // Load tools from API
+        async function loadTools() {
+            try {
+                const response = await fetch('/api/tools');
+                const tools = await response.json();
+                
+                const container = document.getElementById('tools-container');
+                container.innerHTML = '';
+                
+                tools.forEach(tool => {
+                    const toolCard = createToolCard(tool);
+                    container.appendChild(toolCard);
+                });
+            } catch (error) {
+                console.error('Error loading tools:', error);
+            }
+        }
+        
+        function createToolCard(tool) {
+            const col = document.createElement('div');
+            col.className = 'col-md-4 mb-3';
+            
+            col.innerHTML = `
+                <div class="cyber-card p-3 h-100">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-${tool.icon || 'cog'} me-2"></i>
+                        <h6 class="mb-0">${tool.nama}</h6>
+                    </div>
+                    <p class="small mb-3">${tool.deskripsi}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-secondary">${tool.kategori}</span>
+                        <button class="btn btn-cyber btn-sm" onclick="openTool('${tool.id}')">
+                            Jalankan
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            return col;
+        }
+        
+        function openTool(toolId) {
+            addToTerminal(`[EXEC] Menjalankan ${toolId}...`);
+            
+            // Show tool-specific interface
+            showToolInterface(toolId);
+        }
+        
+        function showToolInterface(toolId) {
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.innerHTML = `
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content bg-dark text-light">
+                        <div class="modal-header border-secondary">
+                            <h5 class="modal-title">
+                                <i class="fas fa-cog me-2"></i>
+                                ${toolId.replace('-', ' ').toUpperCase()}
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            ${getToolInterface(toolId)}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+            
+            modal.addEventListener('hidden.bs.modal', () => {
+                document.body.removeChild(modal);
+            });
+        }
+        
+        function getToolInterface(toolId) {
+            switch(toolId) {
+                case 'port-scanner':
+                    return `
+                        <div class="mb-3">
+                            <label class="form-label">Target IP/Domain:</label>
+                            <input type="text" class="form-control bg-dark text-light border-secondary" 
+                                   id="port-target" placeholder="example.com atau 192.168.1.1">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Port Range:</label>
+                            <input type="text" class="form-control bg-dark text-light border-secondary" 
+                                   id="port-range" value="22,80,443,8080" placeholder="22,80,443">
+                        </div>
+                        <button class="btn btn-cyber" onclick="runPortScan()">Mulai Scan</button>
+                        <div id="scan-results" class="mt-3"></div>
+                    `;
+                case 'whois-lookup':
+                    return `
+                        <div class="mb-3">
+                            <label class="form-label">Domain:</label>
+                            <input type="text" class="form-control bg-dark text-light border-secondary" 
+                                   id="whois-domain" placeholder="example.com">
+                        </div>
+                        <button class="btn btn-cyber" onclick="runWhoisLookup()">Lookup</button>
+                        <div id="whois-results" class="mt-3"></div>
+                    `;
+                default:
+                    return `
+                        <div class="alert alert-info">
+                            Interface untuk ${toolId} sedang dalam pengembangan.
+                        </div>
+                    `;
+            }
+        }
+        
+        async function runPortScan() {
+            const target = document.getElementById('port-target').value;
+            const ports = document.getElementById('port-range').value;
+            
+            if (!target) {
+                alert('Masukkan target yang valid');
+                return;
+            }
+            
+            addToTerminal(`[SCAN] Port scan dimulai untuk ${target}...`);
+            
+            try {
+                const response = await fetch('/api/scan/port', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ target, ports })
+                });
+                
+                const result = await response.json();
+                displayPortScanResults(result);
+                addToTerminal(`[DONE] Port scan selesai dalam ${result.scanTime}ms`);
+            } catch (error) {
+                addToTerminal(`[ERROR] Scan gagal: ${error.message}`);
+            }
+        }
+        
+        function displayPortScanResults(result) {
+            const container = document.getElementById('scan-results');
+            container.innerHTML = `
+                <div class="scan-result">
+                    <h6>Hasil Port Scan - ${result.target}</h6>
+                    <p><strong>Open Ports:</strong> ${result.openPorts.length}</p>
+                    <p><strong>Scan Time:</strong> ${result.scanTime}ms</p>
+                    ${result.openPorts.map(port => `
+                        <div class="badge bg-success me-1 mb-1">
+                            ${port.port} (${port.service})
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        
+        function addToTerminal(message) {
+            const terminal = document.getElementById('terminal-output');
+            const div = document.createElement('div');
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}<br>`;
+            terminal.appendChild(div);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+        
+        // Load dashboard stats
+        async function loadDashboardStats() {
+            try {
+                const response = await fetch('/api/dashboard/stats');
+                const stats = await response.json();
+                
+                document.getElementById('total-scans').textContent = stats.totalScans;
+                document.getElementById('security-score').textContent = stats.securityScore + '%';
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            createMatrix();
+            loadTools();
+            loadDashboardStats();
+            
+            // Add CSS for falling animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fall {
+                    0% { transform: translateY(-100vh); }
+                    100% { transform: translateY(100vh); }
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
+</body>
+</html>
