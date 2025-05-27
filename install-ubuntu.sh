@@ -105,45 +105,76 @@ sudo -u socapp npm run db:push
 # Fix untuk masalah crypto dan build aplikasi
 echo "=== 🔨 Memperbaiki konfigurasi build ==="
 
-# Update vite.config.ts untuk mengatasi masalah crypto
-cat > vite.config.ts << 'EOL'
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import { resolve } from "path";
+# Membuat script build alternatif yang mengatasi masalah entry module
+cat > build-production.js << 'EOL'
+const { build } = require('vite');
+const path = require('path');
 
-export default defineConfig({
-  plugins: [react()],
-  resolve: {
-    alias: {
-      "@": resolve(__dirname, "./client/src"),
-      "@shared": resolve(__dirname, "./shared"),
-      "@assets": resolve(__dirname, "./client/src/assets"),
-    },
-  },
-  define: {
-    global: 'globalThis',
-  },
-  server: {
-    host: "0.0.0.0",
-    port: 5173,
-  },
-  build: {
-    outDir: "dist/public",
-    rollupOptions: {
-      external: [],
-    },
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
-  },
-});
+async function buildApp() {
+  try {
+    console.log('Starting production build...');
+    
+    // Build dengan konfigurasi yang diperbaiki
+    await build({
+      root: path.resolve(__dirname, 'client'),
+      build: {
+        outDir: path.resolve(__dirname, 'dist/public'),
+        emptyOutDir: true,
+        rollupOptions: {
+          input: path.resolve(__dirname, 'client/index.html'),
+        },
+      },
+      resolve: {
+        alias: {
+          '@': path.resolve(__dirname, 'client/src'),
+          '@shared': path.resolve(__dirname, 'shared'),
+          '@assets': path.resolve(__dirname, 'attached_assets'),
+        },
+      },
+      define: {
+        global: 'globalThis',
+      },
+    });
+    
+    console.log('Build completed successfully!');
+  } catch (error) {
+    console.error('Build failed:', error);
+    process.exit(1);
+  }
+}
+
+buildApp();
 EOL
+
+# Membuat package.json dengan script build yang diperbaiki
+echo "=== 📦 Memperbarui package.json untuk build produksi ==="
+cp package.json package.json.backup
+
+# Update package.json dengan script build yang baru
+node -e "
+const fs = require('fs');
+const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+pkg.scripts = pkg.scripts || {};
+pkg.scripts['build:prod'] = 'NODE_OPTIONS=\"--openssl-legacy-provider\" node build-production.js';
+pkg.scripts['build:fallback'] = 'NODE_OPTIONS=\"--openssl-legacy-provider\" npx vite build --mode production';
+fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+console.log('package.json updated successfully');
+"
 
 # Build aplikasi dengan environment yang tepat
 echo "=== 🚀 Build aplikasi untuk produksi ==="
 export NODE_ENV=production
 export NODE_OPTIONS="--openssl-legacy-provider --max-old-space-size=4096"
-sudo -u socapp -E npm run build
+
+# Coba build dengan script yang diperbaiki terlebih dahulu
+if sudo -u socapp -E npm run build:prod; then
+    echo "✅ Build berhasil dengan script yang diperbaiki"
+elif sudo -u socapp -E npm run build:fallback; then
+    echo "✅ Build berhasil dengan fallback method"
+else
+    echo "⚠️ Build gagal, menggunakan development mode"
+    echo "Aplikasi akan berjalan dalam mode development"
+fi
 
 # Mengonfigurasi Nginx sebagai reverse proxy
 echo "=== 🌐 Mengkonfigurasi Nginx ==="
